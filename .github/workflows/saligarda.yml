@@ -1,0 +1,90 @@
+name: Pronostic diari de la Saligarda
+
+# Dues execucions al dia, a proposit. El cron de GitHub no es puntual i es pot
+# endarrerir forca minuts sota carrega; amb dos intents, si el primer falla o
+# arriba tard, el segon el cobreix. El guard de 19_bot_x.R impedeix que es
+# publiqui dos cops la mateixa nit, i el de frescor impedeix publicar una nit
+# que ja hagi comencat.
+#
+# Hores UTC (GitHub no fa cas de l'horari d'estiu):
+#   17:30 UTC = 18:30 a l'hivern, 19:30 a l'estiu
+#   19:30 UTC = 20:30 a l'hivern, 21:30 a l'estiu
+# Totes dues son despres de les 17 UTC (finestra del vespre tancada) i abans
+# de les 22 UTC (limit de frescor del pronostic).
+on:
+  schedule:
+    - cron: "30 17 * * *"
+    - cron: "30 19 * * *"
+  workflow_dispatch:          # permet llancar-lo a ma des de la web
+    inputs:
+      nomes_prova:
+        description: "Redactar sense publicar"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write             # per tornar a desar els registres al repositori
+
+concurrency:                  # que dues execucions no es trepitgin els CSV
+  group: pronostic
+  cancel-in-progress: false
+
+jobs:
+  pronostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "release"
+          use-public-rspm: true       # paquets binaris: instal.lacio en segons
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::data.table
+            any::jsonlite
+            any::httr
+            any::ranger
+
+      - name: Pronostic
+        run: Rscript 16_pronostic.R
+
+      - name: Publicar a X
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        run: |
+          if [ "${{ github.event.inputs.nomes_prova }}" = "true" ]; then
+            Rscript 19_bot_x.R --prova
+          else
+            Rscript 19_bot_x.R
+          fi
+
+      - name: Desar els registres
+        run: |
+          git config user.name  "bot-saligarda"
+          git config user.email "bot-saligarda@users.noreply.github.com"
+          git add derived/pronostics.csv derived/posts_x.csv pronostic.txt post_x.txt || true
+          if git diff --staged --quiet; then
+            echo "cap canvi a desar"
+          else
+            git commit -m "pronostic $(date -u +%Y-%m-%d)"
+            # si una altra execucio ha escrit mentrestant, reintegra i torna-ho a provar
+            for i in 1 2 3; do
+              git pull --rebase --autostash && git push && break
+              sleep 5
+            done
+          fi
+
+      - name: Resum
+        if: always()
+        run: |
+          echo "### Pronostic" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat post_x.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "(no generat)" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

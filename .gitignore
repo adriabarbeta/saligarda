@@ -1,0 +1,33 @@
+# ---------------------------------------------------------------------------
+# Que NO va al repositori
+#
+# El repositori nomes ha de portar el que cal per executar el bot cada dia:
+# els scripts, el model entrenat i els registres. Les dades brutes (4.710
+# Excel de la Davis, 181 MB de XEMA, la reanalisi) es queden a l'ordinador,
+# i els fitxers intermedis es poden regenerar sempre amb 00_run_all.R.
+# ---------------------------------------------------------------------------
+
+# dades brutes
+Saligarda/
+*.xls
+*.xlsx
+Dades_meteorol*.csv
+Metadades_*.csv
+saligarda.csv
+vic.csv
+
+# tot el que es deriva, EXCEPTE el model desplegat i els registres del bot
+derived/*
+!derived/model_operatiu.rds
+!derived/pronostics.csv
+!derived/posts_x.csv
+
+# registres d'execucio
+*.log
+
+# credencials: no hi han de ser mai, pero per si de cas
+.saligarda_x.json
+*credencials*
+.Renviron
+.Rhistory
+.RData
