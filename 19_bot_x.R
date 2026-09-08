@@ -151,7 +151,8 @@ credencials <- if (NOMES_PROVA) NULL else llegeix_credencials()
 if (NOMES_PROVA) {
   detall <- "mode prova: no s'ha enviat"
 } else if (is.null(credencials)) {
-  detall <- paste("sense credencials (ni variables d'entorn ni", FITXER_CREDENCIALS, ")")
+  # no s'hi posa la ruta completa: aquest registre es public al repositori
+  detall <- "sense credencials (ni variables d'entorn ni fitxer local)"
 } else {
   cr <- credencials$cr
   cat("Credencials llegides de:", credencials$font, "\n")
