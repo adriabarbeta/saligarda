@@ -32,7 +32,7 @@ que:
    Biscaia** (anomalia de fins a +11 hPa sobre el domini), i el que en governa la
    força és el **refredament radiatiu de la Plana de Vic**: cada grau d'amplitud
    tèrmica a Vic val +0,45 km/h de drenatge.
-7. **Es pot pronosticar la nit abans amb destresa notable**: R² = 0,58 per a la
+7. **Es pot pronosticar la nit abans amb destresa notable**: R² = 0,57 per a la
    intensitat i AUC = 0,87 per a l'ocurrència, amb un sistema que s'executa sol cada
    vespre a partir d'Open-Meteo i que no necessita l'estació pròpia (§ 2.11–2.12).
 8. **La penella estava girada +32° des del 2011** i ja s'ha corregit (§ 2.10). Que el
@@ -543,10 +543,10 @@ PCA. I s'hi incorpora el predictor que faltava: la **nuvolositat**.
 | Objectiu | Model | Destresa (validació any a any, 3.855 nits) |
 |---|---|---|
 | Intensitat | climatologia | R² = 0,133 · RMSE 4,24 |
-| | **OP-A (només Open-Meteo)** | **R² = 0,577 · RMSE 2,96 · destresa +0,51** |
-| | OP-B (+ estació pròpia) | R² = 0,574 · RMSE 2,97 |
+| | **OP-A (només Open-Meteo)** | **R² = 0,574 · RMSE 2,97 · destresa +0,51** |
+| | OP-B (+ estació pròpia) | R² = 0,572 · RMSE 2,98 |
 | Ocurrència | climatologia | AUC = 0,722 |
-| | **OP-A** | **AUC = 0,867 · Brier 0,143 · POD 0,66 · FAR 0,23** |
+| | **OP-A** | **AUC = 0,866 · Brier 0,143 · POD 0,65 · FAR 0,22** |
 | Sensació de fred | climatologia | RMSE 3,31 °C |
 | | **OP-A** | **RMSE 1,42 °C · destresa +0,82** |
 
@@ -554,7 +554,7 @@ Comparat amb el model de § 2.11 (R² 0,408, AUC 0,814), el salt és gran, i ve
 sobretot de la nuvolositat i del vent del model numèric. Per estacions, R² de 0,561
 (DJF) a 0,442 (JJA).
 
-**L'estació pròpia ja no aporta res** (0,574 contra 0,577): el sistema es pot
+**L'estació pròpia ja no aporta res** (0,572 contra 0,574): el sistema es pot
 automatitzar del tot sense dependre dels Excel diaris de la Davis.
 
 Predictors més importants: component nord-sud del vent del model (100), component
@@ -600,6 +600,12 @@ Compte amb l'encert global: un pronòstic que digués **sempre que no** encertar
 61 %, el 82 % i el 93 % respectivament, de manera que el guany real és de +18, +7 i
 +2 punts. Com més rar es fa l'esdeveniment, més fàcil és semblar encertat i menys
 s'informa.
+
+El model desplegat usa **300 arbres i mida mínima de node 10**, no 800/5: el
+fitxer baixa de 24 a 6 MB —cosa que compta per fer-lo viatjar a un repositori— i
+la destresa només cau 0,003 de R² i 0,002 d'AUC. La validació creuada s'ha fet
+amb **els mateixos paràmetres** que el model desplegat: el que es valida ha de
+ser exactament el que s'executa.
 
 #### Bot de publicació diària
 
