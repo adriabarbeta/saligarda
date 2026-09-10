@@ -113,9 +113,9 @@ data_txt <- sprintf("%d %s%s", as.integer(format(nit, "%d")), prep, mesos[m_i])
 emoji <- if (pc >= 75) "\U0001F4A8" else if (pc >= 40) "\U0001F343" else "\U0001F634"
 linia_int <- if (pc >= 25)
   sprintf("Intensitat esperada: %.0f km/h", p$u_mati_pred) else
-  "Mat\u00ed tranquil, previsiblement"
+  "Mat\u00ed tranquil, segurament"
 linia_hora <- if (pc >= 40)
-  sprintf("M\u00e0xim cap a les %d h, s'apaga cap a les %d h",
+  sprintf("M\u00e0xim cap a les %d h, afluixa cap a les %d h",
           hora_local(p$pic_utc, nit), hora_local(p$final_utc, nit)) else NULL
 # \u00b0 es el simbol de grau; \u00ba es l'ordinal masculi i no toca aqui
 linia_wc <- if (!is.na(p$wc_min_pred) && p$wc_min_pred <= 5)
