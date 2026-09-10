@@ -156,12 +156,23 @@ if ("--verifica" %in% commandArgs(trailingOnly = TRUE)) {
   if (is.null(cr)) { cat("No hi ha credencials enlloc.\n"); quit(save = "no", status = 1) }
   k <- cr$cr
   cat("Credencials de:", cr$font, "\n")
-  cat(sprintf("  API Key            : %d caracters, comenca per %s\n",
-              nchar(k$api_key), substr(k$api_key, 1, 4)))
-  cat(sprintf("  Access Token       : %d caracters, %s\n", nchar(k$access_token),
-              if (grepl("-", k$access_token, fixed = TRUE))
-                "porta un guio (senyal bona: els Access Token son <id>-<cadena>)"
-              else "SENSE guio: aixo NO sembla un Access Token d'OAuth 1.0a"))
+  # Llargades esperades a X. Si alguna no quadra, ja sabem quin secret revisar
+  # sense haver de veure'n mai el valor.
+  esperat <- c(api_key = 25L, api_secret = 50L,
+               access_token = 50L, access_token_secret = 45L)
+  for (nm in names(esperat)) {
+    v <- k[[nm]]; n <- nchar(v)
+    ok <- if (nm == "access_token") n >= 45 && n <= 60 else n == esperat[[nm]]
+    cat(sprintf("  %-20s %3d caracters (esperat %d) %s\n", nm, n, esperat[[nm]],
+                if (ok) "OK" else "<-- NO QUADRA"))
+  }
+  if (!grepl("-", k$access_token, fixed = TRUE))
+    cat("  l'Access Token no porta guio: no sembla d'OAuth 1.0a\n")
+  # Els espais al final son l'error mes frequent en enganxar secrets
+  bruts <- names(k)[vapply(k, function(x) x != trimws(x), logical(1))]
+  if (length(bruts))
+    cat("  ATENCIO, amb espais o salts de linia al davant o darrere:",
+        paste(bruts, collapse = ", "), "\n")
   U <- "https://api.x.com/2/users/me"
   ap <- oauth_app("saligarda", key = k$api_key, secret = k$api_secret)
   sg <- oauth_signature(U, "GET", ap, k$access_token, k$access_token_secret)
