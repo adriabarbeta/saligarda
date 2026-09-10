@@ -121,7 +121,7 @@ data_txt <- sprintf("%s%d %s%s", art_dia, dia_n, prep_mes, mesos[m_i])
 emoji <- if (pc >= 75) "\U0001F4A8" else if (pc >= 40) "\U0001F343" else "\U0001F634"
 linia_int <- if (pc >= 25)
   sprintf("Intensitat esperada: %.0f km/h", p$u_mati_pred) else
-  "Mat\u00ed tranquil, segurament"
+  "No far\u00e0 gaire aire, segurament"
 linia_hora <- if (pc >= 40)
   sprintf("M\u00e0xim cap a les %d h, afluixa cap a les %d h",
           hora_local(p$pic_utc, nit), hora_local(p$final_utc, nit)) else NULL
