@@ -147,6 +147,42 @@ llegeix_credencials <- function() {
   NULL
 }
 
+# --------------------------------------------------------------- verificacio
+# Comprova les credencials contra un endpoint de NOMES LECTURA i surt. Serveix
+# per separar "les claus son dolentes" de "hi ha un problema en publicar", que
+# des de fora es veuen igual (401 als dos casos).
+if ("--verifica" %in% commandArgs(trailingOnly = TRUE)) {
+  cr <- llegeix_credencials()
+  if (is.null(cr)) { cat("No hi ha credencials enlloc.\n"); quit(save = "no", status = 1) }
+  k <- cr$cr
+  cat("Credencials de:", cr$font, "\n")
+  cat(sprintf("  API Key            : %d caracters, comenca per %s\n",
+              nchar(k$api_key), substr(k$api_key, 1, 4)))
+  cat(sprintf("  Access Token       : %d caracters, %s\n", nchar(k$access_token),
+              if (grepl("-", k$access_token, fixed = TRUE))
+                "porta un guio (senyal bona: els Access Token son <id>-<cadena>)"
+              else "SENSE guio: aixo NO sembla un Access Token d'OAuth 1.0a"))
+  U <- "https://api.x.com/2/users/me"
+  ap <- oauth_app("saligarda", key = k$api_key, secret = k$api_secret)
+  sg <- oauth_signature(U, "GET", ap, k$access_token, k$access_token_secret)
+  ec <- function(x) URLencode(as.character(x), reserved = TRUE)
+  au <- paste0("OAuth ", paste0(names(sg), '="', vapply(sg, ec, character(1)), '"',
+                                collapse = ", "))
+  rr <- GET(U, add_headers(Authorization = au))
+  cat(sprintf("\n  GET /2/users/me -> HTTP %d\n", status_code(rr)))
+  if (status_code(rr) == 200) {
+    u <- content(rr)$data
+    cat(sprintf("  CREDENCIALS CORRECTES: autenticat com a @%s (%s)\n", u$username, u$name))
+    cat("  Si la publicacio falla amb 403, es el permis d'escriptura dels tokens.\n")
+  } else {
+    cat("  ", substr(content(rr, "text", encoding = "UTF-8"), 1, 300), "\n", sep = "")
+    cat("\n  Un 401 aqui vol dir que les quatre claus no son valides com a joc.\n")
+    cat("  Causa mes frequent: haver posat el Client ID i el Client Secret\n")
+    cat("  (OAuth 2.0) en comptes de l'API Key i l'API Key Secret (OAuth 1.0a).\n")
+  }
+  quit(save = "no", status = if (status_code(rr) == 200) 0 else 1)
+}
+
 enviat <- FALSE; detall <- ""
 credencials <- if (NOMES_PROVA) NULL else llegeix_credencials()
 if (NOMES_PROVA) {
