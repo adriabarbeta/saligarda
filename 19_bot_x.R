@@ -157,15 +157,18 @@ if (NOMES_PROVA) {
 } else {
   cr <- credencials$cr
   cat("Credencials llegides de:", credencials$font, "\n")
+  URL <- "https://api.x.com/2/tweets"
   app <- oauth_app("saligarda", key = cr$api_key, secret = cr$api_secret)
-  tok <- list(oauth_token = cr$access_token, oauth_token_secret = cr$access_token_secret)
-  r <- try(POST("https://api.x.com/2/tweets",
-                config = oauth_signature(url = "https://api.x.com/2/tweets",
-                                         method = "POST", app = app,
-                                         token = tok$oauth_token,
-                                         token_secret = tok$oauth_token_secret),
-                body = list(text = text), encode = "json",
-                add_headers("Content-Type" = "application/json")), silent = TRUE)
+  sig <- oauth_signature(URL, "POST", app, cr$access_token, cr$access_token_secret)
+  # oauth_signature() retorna una LLISTA de parametres, no una configuracio de
+  # peticio: passar-la a POST(config=) no genera cap capcalera i la peticio surt
+  # sense autenticar (error 401). Cal muntar la capcalera Authorization a ma.
+  # Amb OAuth 1.0a i cos JSON, el cos NO entra a la signatura.
+  enc <- function(x) URLencode(as.character(x), reserved = TRUE)
+  auth <- paste0("OAuth ", paste0(names(sig), '="', vapply(sig, enc, character(1)), '"',
+                                  collapse = ", "))
+  r <- try(POST(URL, add_headers(Authorization = auth),
+                body = list(text = text), encode = "json"), silent = TRUE)
   if (inherits(r, "try-error")) {
     detall <- paste("error de xarxa:", conditionMessage(attr(r, "condition")))
   } else if (status_code(r) %in% c(200L, 201L)) {
