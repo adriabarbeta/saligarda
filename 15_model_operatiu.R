@@ -66,6 +66,20 @@ fes_predictors <- function(OM, clim_rad = NULL) {
     om_t_nord   = mean(nord_temperature_2m, na.rm = TRUE),
     om_t_sud    = mean(sud_temperature_2m, na.rm = TRUE)), by = date]
 
+  # --- finestra del MATI: 6-11 hora local, que es la que viu la gent i la que
+  # prediu el bot. S'hi afegeix la radiacio, que es el que de debo apaga el
+  # drenatge: el sol escalfa el fons de vall i desfa la inversio.
+  OM[, h_loc := as.integer(format(datetime, tz = "Europe/Madrid", format = "%H"))]
+  mati <- OM[h_loc >= 6 & h_loc < 11, .(
+    om_m_nub   = mean(garriga_cloud_cover, na.rm = TRUE),
+    om_m_nubB  = mean(garriga_cloud_cover_low, na.rm = TRUE),
+    om_m_rad   = mean(garriga_shortwave_radiation, na.rm = TRUE),
+    om_m_t2m   = mean(garriga_temperature_2m, na.rm = TRUE),
+    om_m_pmsl  = mean(garriga_pressure_msl, na.rm = TRUE),
+    om_m_u10   = mean(u10, na.rm = TRUE),
+    om_m_v10   = mean(v10, na.rm = TRUE),
+    om_m_dpNS  = mean(dp_NS, na.rm = TRUE)), by = date]
+
   # --- vespre del dia D-1: 12-17 UTC (i el dia sencer per a la radiacio)
   vespre <- OM[h >= 12 & h < 17, .(
     om_nub_vespre  = mean(garriga_cloud_cover, na.rm = TRUE),
@@ -82,7 +96,7 @@ fes_predictors <- function(OM, clim_rad = NULL) {
   p06[, om_dp24 := p06 - shift(p06)]
 
   d <- Reduce(function(a, b) merge(a, b, by = "date", all.x = TRUE),
-              list(nit, vespre, p06[, .(date, om_dp24)]))
+              list(nit, mati, vespre, p06[, .(date, om_dp24)]))
   d[, `:=`(doy = yday(date),
            s1 = sin(2*pi*yday(date)/365), c1 = cos(2*pi*yday(date)/365),
            s2 = sin(4*pi*yday(date)/365), c2 = cos(4*pi*yday(date)/365))]
@@ -115,16 +129,32 @@ est_vespre[, date := date + 1L]
 d <- Reduce(function(a, b) merge(a, b, by = "date"),
             list(D[, .(date, any, mes, est, u_dv, R, saligarda, wc_min)], P, est_vespre))
 d[, `:=`(sal = as.integer(saligarda), sal_f = factor(as.integer(saligarda), levels = c(0,1)))]
-# Segona definicio, per al bot public: nomes els episodis que es noten.
-# Amb u_dv >= 8 s'anunciaria Saligarda 39% dels dies i el nom es dilueix;
-# amb >= 12 son uns 50 dies l'any i la precisio del pronostic es del 78%.
-LLINDAR_BOT <- 12
-d[, sal12_f := factor(as.integer(u_dv >= LLINDAR_BOT & R >= 0.7), levels = c(0,1))]
+# ------------------------------------------------- objectiu del bot public
+# L'estudi usa la finestra 00-10 UTC, que descriu l'episodi sencer. El bot,
+# en canvi, ha de parlar del tram que viu la gent: 6-11 hora local. Provat
+# empiricament, entrenar directament sobre el mati prediu el mati millor que
+# fer servir el model nocturn (R2 0,518 contra 0,500), encara que el mati
+# sigui intrinsecament mes dificil que la nit sencera (0,58).
+# El llindar puja de 12 a 14 km/h perque la finestra del mati exclou les
+# hores fluixes de la matinada; amb 14 surten uns 48 dies l'any.
+LLINDAR_BOT <- 14
+gm <- fread("derived/garriga_treball.csv")
+gm[, datetime := as.POSIXct(datetime, tz = "UTC")]
+gm[, h_loc := as.integer(format(datetime, tz = "Europe/Madrid", format = "%H"))]
+idx_mati <- gm[h_loc >= 6 & h_loc < 11, .(
+  u_mati = mean(u_dv, na.rm = TRUE),
+  R_mati = {s <- sin(hi_dir_deg*pi/180); c <- cos(hi_dir_deg*pi/180)
+            ok <- !is.na(s) & !is.na(wind_mean) & wind_mean >= 2
+            if (sum(ok) < 10) NA_real_ else sqrt(mean(s[ok])^2 + mean(c[ok])^2)},
+  n_mati = sum(!is.na(u_dv))), by = .(date = as.IDate(date))][n_mati >= 40]
+d <- merge(d, idx_mati, by = "date", all.x = TRUE)
+d[, sal12_f := factor(as.integer(u_mati >= LLINDAR_BOT & R_mati >= 0.7), levels = c(0,1))]
 d <- d[any %in% 2013:2023]
 OMV <- grep("^om_", names(d), value = TRUE)
 STV <- grep("^st_", names(d), value = TRUE)
 EST <- c("s1","c1","s2","c2")
 d_tot <- d[complete.cases(d[, c("u_dv", OMV), with = FALSE])]   # model final
+d_bot <- d[complete.cases(d[, c("u_mati", "sal12_f", OMV), with = FALSE])]  # bot
 d     <- d[complete.cases(d[, c("u_dv", OMV, STV), with = FALSE])]  # comparar A i B
 cat(sprintf("    nits per comparar OP-A/OP-B: %d | per al model final: %d | Saligarda: %.1f%%\n",
             nrow(d), nrow(d_tot), 100*mean(d$sal)))
@@ -194,16 +224,47 @@ setorder(IM, -rel)
 cat("\n=== Importancia dels predictors (OP-A) ===\n")
 print(head(IM[, .(variable, importancia = round(rel, 1))], 12))
 
+# =============================== validacio del model del BOT (finestra del mati)
+cat("
+=== D) BOT: tram de 6 a 11 hora local ===
+")
+anys_b <- sort(unique(d_bot$any))
+cv_bot <- rbindlist(lapply(anys_b, function(a) {
+  tr <- d_bot[any != a]; te <- d_bot[any == a]
+  mi <- ranger(as.formula(paste("u_mati ~", paste(c(EST, OMV), collapse = "+"))),
+               tr, num.trees = NUM_TREES, min.node.size = MIN_NODE)
+  mo <- ranger(as.formula(paste("sal12_f ~", paste(c(EST, OMV), collapse = "+"))),
+               tr, num.trees = NUM_TREES, min.node.size = MIN_NODE, probability = TRUE)
+  data.table(o = te$u_mati, p = predict(mi, te)$predictions,
+             os = as.integer(as.character(te$sal12_f)),
+             ps = predict(mo, te)$predictions[, "1"])
+}))
+R2_BOT <- 1 - sum((cv_bot$o - cv_bot$p)^2) / sum((cv_bot$o - mean(cv_bot$o))^2)
+AUC_BOT <- as.numeric(suppressMessages(auc(roc(cv_bot$os, cv_bot$ps, quiet = TRUE))))
+pb <- cv_bot$ps >= 0.5; ob <- cv_bot$os == 1
+cat(sprintf("  intensitat  R2 = %.3f | RMSE = %.2f
+", R2_BOT,
+            sqrt(mean((cv_bot$o - cv_bot$p)^2))))
+cat(sprintf("  ocurrencia AUC = %.3f | Brier = %.3f | precisio = %.0f%% | cobertura = %.0f%%
+",
+            AUC_BOT, mean((cv_bot$ps - cv_bot$os)^2),
+            100*sum(pb & ob)/max(1, sum(pb)), 100*sum(pb & ob)/sum(ob)))
+cat(sprintf("  episodis (u_mati >= %d km/h): %.0f dies/any
+",
+            LLINDAR_BOT, 365 * mean(ob)))
+
 # ============================================ models finals per a l'operativa
 final <- list(
   intensitat = ranger(as.formula(paste("u_dv ~", paste(c(EST, OMV), collapse = " + "))),
                       d_tot, num.trees = NUM_TREES, min.node.size = MIN_NODE),
   ocurrencia = ranger(as.formula(paste("sal_f ~", paste(c(EST, OMV), collapse = " + "))),
                       d_tot, num.trees = NUM_TREES, min.node.size = MIN_NODE, probability = TRUE),
-  # per al bot public: probabilitat d'episodi que es noti (u_dv >= 12 km/h)
+  # per al bot public: intensitat i probabilitat del tram 6-11 hora local
+  intensitat_bot = ranger(as.formula(paste("u_mati ~", paste(c(EST, OMV), collapse = " + "))),
+                          d_bot, num.trees = NUM_TREES, min.node.size = MIN_NODE),
   ocurrencia_bot = ranger(as.formula(paste("sal12_f ~", paste(c(EST, OMV), collapse = " + "))),
-                          d_tot, num.trees = NUM_TREES, min.node.size = MIN_NODE, probability = TRUE),
-  llindar_bot = LLINDAR_BOT,
+                          d_bot, num.trees = NUM_TREES, min.node.size = MIN_NODE, probability = TRUE),
+  llindar_bot = LLINDAR_BOT, finestra_bot = "6-11 hora local",
   sensacio   = ranger(as.formula(paste("wc_min ~", paste(c(EST, OMV), collapse = " + "))),
                       d_tot[!is.na(wc_min)], num.trees = NUM_TREES, min.node.size = MIN_NODE),
   vars = c(EST, OMV), punts = NULL,
@@ -214,6 +275,7 @@ final <- list(
   cicle = fread("derived/saligarda_diari.csv")[saligarda == TRUE,
             .(pic = as.integer(round(median(pic, na.rm = TRUE))),
               final = as.integer(round(median(final, na.rm = TRUE)))), by = est],
+  destresa_bot = list(R2 = R2_BOT, AUC = AUC_BOT),
   destresa = list(intensitat_R2 = 1 - sum((a_int$obs-a_int$pred)^2)/sum((a_int$obs-mean(a_int$obs))^2),
                   ocurrencia_AUC = as.numeric(suppressMessages(auc(roc(b_a$obs, b_a$pred, quiet=TRUE)))),
                   sensacio_RMSE = sqrt(mean((w_a$obs-w_a$pred)^2))))

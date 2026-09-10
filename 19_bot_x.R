@@ -8,9 +8,10 @@
 #   - Publica la PROBABILITAT, no un si/no. El model esta ben calibrat (el
 #     diagrama de fiabilitat cau sobre la diagonal), de manera que un 62% vol
 #     dir 62% de debo i el post no pot ser mai "fals".
-#   - L'episodi es defineix com u_dv >= 12 km/h: uns 50 dies l'any. Amb el
-#     llindar de 8 s'anunciaria Saligarda un dia de cada tres i el nom es
-#     dilueix.
+#   - L'episodi es el tram de 6 a 11 HORA LOCAL amb component vall avall
+#     >= 14 km/h: uns 48 dies l'any. Es la finestra que viu la gent, i a
+#     l'hivern coincideix amb el maxim del drenatge (10,5-10,7 km/h de mitjana
+#     entre les 6 i les 9). L'estudi, en canvi, usa 00-10 UTC.
 #   - SENSE ENLLACOS. A X un post amb enllac costa 0,20 $ i un sense, 0,015 $.
 #   - Hores en hora local, que es un post public, no un informe tecnic.
 #   - No publica dos cops la mateixa nit (ho comprova al registre).
@@ -54,7 +55,7 @@ arg_val <- function(nom) {
 }
 if (!is.null(v <- arg_val("nit")))  nit <- as.Date(v)
 if (!is.null(v <- arg_val("p")))    p$p_bot <- as.numeric(v)
-if (!is.null(v <- arg_val("u")))    p$u_dv_pred <- as.numeric(v)
+if (!is.null(v <- arg_val("u")))    p$u_mati_pred <- as.numeric(v)
 if (!is.null(v <- arg_val("wc")))   p$wc_min_pred <- as.numeric(v)
 SIMULAT <- length(grep("^--(nit|p|u|wc)=", commandArgs(TRUE))) > 0
 if (SIMULAT) {
@@ -111,8 +112,8 @@ data_txt <- sprintf("%d %s%s", as.integer(format(nit, "%d")), prep, mesos[m_i])
 
 emoji <- if (pc >= 75) "\U0001F4A8" else if (pc >= 40) "\U0001F343" else "\U0001F634"
 linia_int <- if (pc >= 25)
-  sprintf("Intensitat esperada: %.0f km/h", p$u_dv_pred) else
-  "Nit tranquil\u00b7la, previsiblement"
+  sprintf("Intensitat esperada: %.0f km/h", p$u_mati_pred) else
+  "Mat\u00ed tranquil, previsiblement"
 linia_hora <- if (pc >= 40)
   sprintf("M\u00e0xim cap a les %d h, s'apaga cap a les %d h",
           hora_local(p$pic_utc, nit), hora_local(p$final_utc, nit)) else NULL
@@ -121,7 +122,7 @@ linia_wc <- if (!is.na(p$wc_min_pred) && p$wc_min_pred <= 5)
   sprintf("Sensaci\u00f3 m\u00ednima: %.0f \u00b0C", p$wc_min_pred) else NULL
 
 text <- paste(c(
-  sprintf("%s Saligarda \u00b7 matinada del %s", emoji, data_txt),
+  sprintf("%s Saligarda \u00b7 mat\u00ed del %s", emoji, data_txt),
   sprintf("Probabilitat: %d %%", pc),
   linia_int, linia_hora, linia_wc,
   "#laGarriga #Congost"), collapse = "\n")
@@ -179,6 +180,6 @@ cat(if (enviat) "PUBLICAT: " else "NO publicat: ", detall, "\n", sep = "")
 
 fwrite(data.table(moment = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
                   nit = as.character(nit), probabilitat = pc,
-                  u_dv_pred = p$u_dv_pred, enviat = enviat, detall = detall,
+                  u_mati_pred = p$u_mati_pred, enviat = enviat, detall = detall,
                   text = gsub("\n", " | ", text)),
        REGISTRE, append = file.exists(REGISTRE))

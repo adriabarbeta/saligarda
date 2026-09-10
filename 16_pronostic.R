@@ -74,9 +74,13 @@ if (!nrow(p)) stop("no hi ha predictors per a la nit ", format(nit))
 int <- predict(MODEL$intensitat, p)$predictions
 pro <- predict(MODEL$ocurrencia, p)$predictions[, "1"]        # u_dv >= 8 (estudi)
 wc  <- predict(MODEL$sensacio,   p)$predictions
-# probabilitat d'episodi que es noti (u_dv >= 12): es la que publica el bot
+# El bot publica el tram de 6 a 11 hora local, que es el que viu la gent, amb
+# el seu propi model: entrenar sobre el mati prediu el mati millor que fer
+# servir el model nocturn.
 pro_bot <- if (!is.null(MODEL$ocurrencia_bot))
   predict(MODEL$ocurrencia_bot, p)$predictions[, "1"] else NA_real_
+int_bot <- if (!is.null(MODEL$intensitat_bot))
+  predict(MODEL$intensitat_bot, p)$predictions else NA_real_
 # cicle horari tipic de l'estacio de l'any corresponent (hores UTC)
 est_nit <- c("DJF","DJF","MAM","MAM","MAM","JJA","JJA","JJA",
              "SON","SON","SON","DJF")[as.integer(format(nit, "%m"))]
@@ -95,8 +99,9 @@ linies <- c(
   "==========================================================",
   "",
   sprintf("  Probabilitat d'episodi ....... %3.0f %%   (confianca %s)", 100*pro, confianca),
-  sprintf("  ... que es noti (>= %d km/h) .. %3.0f %%",
-          MODEL$llindar_bot %||% 12, 100*pro_bot),
+  sprintf("  MATI (%s):", MODEL$finestra_bot %||% "6-11 hora local"),
+  sprintf("    probabilitat (>= %d km/h) . %3.0f %%", MODEL$llindar_bot %||% 14, 100*pro_bot),
+  sprintf("    intensitat esperada ....... %4.1f km/h", int_bot),
   sprintf("  Intensitat esperada .......... %4.1f km/h  -> %s", int, categoria),
   sprintf("  Sensacio de fred minima ...... %4.1f C", wc),
   "",
@@ -121,6 +126,7 @@ writeLines(linies, "pronostic.txt")
 # --- registre per poder verificar despres -----------------------------------
 reg <- data.table(emes = format(ara, "%Y-%m-%d %H:%M"), nit = as.character(nit),
                   p_saligarda = round(pro, 3), p_bot = round(pro_bot, 3),
+                  u_mati_pred = round(int_bot, 2),
                   pic_utc = pic_utc, final_utc = final_utc,
                   u_dv_pred = round(int, 2),
                   wc_min_pred = round(wc, 2), categoria = categoria,
