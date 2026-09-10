@@ -25,9 +25,16 @@ derived/*
 # registres d'execucio
 *.log
 
-# credencials: no hi han de ser mai, pero per si de cas
+# credencials: no hi han de ser mai, pero per si de cas. La llista es amplia
+# a proposit: en un repositori public, un "git add -A" distret no es recupera.
 .saligarda_x.json
 *credencials*
+keys.txt
+*key*.txt
+*token*.txt
+*secret*
+*.pem
+.env
 .Renviron
 .Rhistory
 .RData
