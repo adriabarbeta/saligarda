@@ -233,3 +233,6 @@ fwrite(data.table(moment = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
                   u_mati_pred = p$u_mati_pred, enviat = enviat, detall = detall,
                   text = gsub("\n", " | ", text)),
        REGISTRE, append = file.exists(REGISTRE))
+
+if (exists("codi_sortida") && codi_sortida != 0L)
+  quit(save = "no", status = codi_sortida)
