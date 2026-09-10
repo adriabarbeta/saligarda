@@ -105,10 +105,18 @@ hora_local <- function(h_utc, data) {           # sense zero al davant
 }
 mesos <- c("gener","febrer","març","abril","maig","juny","juliol","agost",
            "setembre","octubre","novembre","desembre")
-m_i <- as.integer(format(nit, "%m"))
-# elisio catalana: de + vocal -> d' (abril, agost, octubre)
-prep <- if (m_i %in% c(4, 8, 10)) "d'" else "de "
-data_txt <- sprintf("%d %s%s", as.integer(format(nit, "%d")), prep, mesos[m_i])
+m_i   <- as.integer(format(nit, "%m"))
+dia_n <- as.integer(format(nit, "%d"))
+# Apostrofacio catalana, dues regles independents:
+#  1) l'article "del" passa a "de l'" davant de vocal. Els unics dies que es
+#     llegeixen comencant per vocal son l'1 (u) i l'11 (onze); tots els altres
+#     comencen per consonant: dos, tres, quatre, cinc, sis, set, vuit, nou,
+#     deu, dotze... vint, trenta.
+#  2) la preposicio "de" passa a "d'" davant dels mesos que comencen per vocal:
+#     abril, agost i octubre.
+art_dia  <- if (dia_n %in% c(1, 11)) "de l'" else "del "
+prep_mes <- if (m_i %in% c(4, 8, 10)) "d'" else "de "
+data_txt <- sprintf("%s%d %s%s", art_dia, dia_n, prep_mes, mesos[m_i])
 
 emoji <- if (pc >= 75) "\U0001F4A8" else if (pc >= 40) "\U0001F343" else "\U0001F634"
 linia_int <- if (pc >= 25)
@@ -122,7 +130,7 @@ linia_wc <- if (!is.na(p$wc_min_pred) && p$wc_min_pred <= 5)
   sprintf("Sensaci\u00f3 m\u00ednima: %.0f \u00b0C", p$wc_min_pred) else NULL
 
 text <- paste(c(
-  sprintf("%s Saligarda \u00b7 mat\u00ed del %s", emoji, data_txt),
+  sprintf("%s Saligarda \u00b7 mat\u00ed %s", emoji, data_txt),
   sprintf("Probabilitat: %d %%", pc),
   linia_int, linia_hora, linia_wc,
   "#laGarriga #Congost"), collapse = "\n")
