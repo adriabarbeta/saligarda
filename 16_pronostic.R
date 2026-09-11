@@ -81,6 +81,10 @@ pro_bot <- if (!is.null(MODEL$ocurrencia_bot))
   predict(MODEL$ocurrencia_bot, p)$predictions[, "1"] else NA_real_
 int_bot <- if (!is.null(MODEL$intensitat_bot))
   predict(MODEL$intensitat_bot, p)$predictions else NA_real_
+# tram fort del mati (6-9 local): a l'estiu el drenatge ja s'ha apagat a les 9
+# i la mitjana de 6-11 amaga que a primera hora si que bufava
+int_1a <- if (!is.null(MODEL$intensitat_primera))
+  predict(MODEL$intensitat_primera, p)$predictions else NA_real_
 # cicle horari tipic de l'estacio de l'any corresponent (hores UTC)
 est_nit <- c("DJF","DJF","MAM","MAM","MAM","JJA","JJA","JJA",
              "SON","SON","SON","DJF")[as.integer(format(nit, "%m"))]
@@ -126,7 +130,7 @@ writeLines(linies, "pronostic.txt")
 # --- registre per poder verificar despres -----------------------------------
 reg <- data.table(emes = format(ara, "%Y-%m-%d %H:%M"), nit = as.character(nit),
                   p_saligarda = round(pro, 3), p_bot = round(pro_bot, 3),
-                  u_mati_pred = round(int_bot, 2),
+                  u_mati_pred = round(int_bot, 2), u_1a_pred = round(int_1a, 2),
                   pic_utc = pic_utc, final_utc = final_utc,
                   u_dv_pred = round(int, 2),
                   wc_min_pred = round(wc, 2), categoria = categoria,

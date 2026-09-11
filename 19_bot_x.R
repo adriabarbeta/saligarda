@@ -56,8 +56,9 @@ arg_val <- function(nom) {
 if (!is.null(v <- arg_val("nit")))  nit <- as.Date(v)
 if (!is.null(v <- arg_val("p")))    p$p_bot <- as.numeric(v)
 if (!is.null(v <- arg_val("u")))    p$u_mati_pred <- as.numeric(v)
+if (!is.null(v <- arg_val("u1")))   p$u_1a_pred <- as.numeric(v)
 if (!is.null(v <- arg_val("wc")))   p$wc_min_pred <- as.numeric(v)
-SIMULAT <- length(grep("^--(nit|p|u|wc)=", commandArgs(TRUE))) > 0
+SIMULAT <- length(grep("^--(nit|p|u1|u|wc)=", commandArgs(TRUE))) > 0
 if (SIMULAT) {
   if (!NOMES_PROVA) stop("la simulacio nomes te sentit amb --prova")
   cat("[SIMULACIO: valors forcats des de la linia d'ordres]\n")
@@ -122,6 +123,12 @@ emoji <- if (pc >= 75) "\U0001F4A8" else if (pc >= 40) "\U0001F343" else "\U0001
 linia_int <- if (pc >= 25)
   sprintf("Intensitat esperada: %.0f km/h", p$u_mati_pred) else
   "No far\u00e0 gaire aire, segurament"
+# A l'estiu el gruix del drenatge es entre les 6 i les 9: la mitjana de tota la
+# finestra queda baixa i el post semblaria dir que no fara aire, quan a primera
+# hora si que en fa. Quan el tram fort destaca clarament, s'avisa.
+linia_1a <- if (!is.na(p$u_1a_pred) && !is.na(p$u_mati_pred) &&
+                p$u_1a_pred - p$u_mati_pred >= 2.5 && p$u_1a_pred >= 8)
+  sprintf("Més marcat a primera hora: ~%.0f km/h fins a les 9 h", p$u_1a_pred) else NULL
 linia_hora <- if (pc >= 40)
   sprintf("M\u00e0xim cap a les %d h, afluixa cap a les %d h",
           hora_local(p$pic_utc, nit), hora_local(p$final_utc, nit)) else NULL
@@ -132,7 +139,7 @@ linia_wc <- if (!is.na(p$wc_min_pred) && p$wc_min_pred <= 5)
 text <- paste(c(
   sprintf("%s Saligarda \u00b7 mat\u00ed %s", emoji, data_txt),
   sprintf("Probabilitat: %d %%", pc),
-  linia_int, linia_hora, linia_wc,
+  linia_int, linia_1a, linia_hora, linia_wc,
   "#laGarriga #Congost"), collapse = "\n")
 
 cat("\n---------------- post ----------------\n"); cat(text, "\n")

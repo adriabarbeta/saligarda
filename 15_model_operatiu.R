@@ -141,6 +141,13 @@ LLINDAR_BOT <- 14
 gm <- fread("derived/garriga_treball.csv")
 gm[, datetime := as.POSIXct(datetime, tz = "UTC")]
 gm[, h_loc := as.integer(format(datetime, tz = "Europe/Madrid", format = "%H"))]
+# A l'estiu el drenatge es apagat a les 9 i girat a les 10, de manera que la
+# mitjana de 6-11 el dilueix (6,2 km/h contra 9,1 del tram 6-9). Canviar la
+# finestra costaria destresa (R2 0,533 -> 0,489), aixi que es mante i s'afegeix
+# a part la intensitat del tram fort, per poder-ho dir al post.
+idx_primera <- gm[h_loc >= 6 & h_loc < 9, .(
+  u_primera = mean(u_dv, na.rm = TRUE), n_p = sum(!is.na(u_dv))),
+  by = .(date = as.IDate(date))][n_p >= 24][, n_p := NULL]
 idx_mati <- gm[h_loc >= 6 & h_loc < 11, .(
   u_mati = mean(u_dv, na.rm = TRUE),
   R_mati = {s <- sin(hi_dir_deg*pi/180); c <- cos(hi_dir_deg*pi/180)
@@ -148,6 +155,7 @@ idx_mati <- gm[h_loc >= 6 & h_loc < 11, .(
             if (sum(ok) < 10) NA_real_ else sqrt(mean(s[ok])^2 + mean(c[ok])^2)},
   n_mati = sum(!is.na(u_dv))), by = .(date = as.IDate(date))][n_mati >= 40]
 d <- merge(d, idx_mati, by = "date", all.x = TRUE)
+d <- merge(d, idx_primera, by = "date", all.x = TRUE)
 d[, sal12_f := factor(as.integer(u_mati >= LLINDAR_BOT & R_mati >= 0.7), levels = c(0,1))]
 d <- d[any %in% 2013:2023]
 OMV <- grep("^om_", names(d), value = TRUE)
@@ -262,6 +270,10 @@ final <- list(
   # per al bot public: intensitat i probabilitat del tram 6-11 hora local
   intensitat_bot = ranger(as.formula(paste("u_mati ~", paste(c(EST, OMV), collapse = " + "))),
                           d_bot, num.trees = NUM_TREES, min.node.size = MIN_NODE),
+  # tram fort del mati (6-9 local), per avisar quan el gruix es a primera hora
+  intensitat_primera = ranger(as.formula(paste("u_primera ~", paste(c(EST, OMV), collapse = " + "))),
+                              d_bot[!is.na(u_primera)], num.trees = NUM_TREES,
+                              min.node.size = MIN_NODE),
   ocurrencia_bot = ranger(as.formula(paste("sal12_f ~", paste(c(EST, OMV), collapse = " + "))),
                           d_bot, num.trees = NUM_TREES, min.node.size = MIN_NODE, probability = TRUE),
   llindar_bot = LLINDAR_BOT, finestra_bot = "6-11 hora local",

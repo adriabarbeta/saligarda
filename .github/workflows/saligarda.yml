@@ -6,16 +6,19 @@ name: Pronostic diari de la Saligarda
 # publiqui dos cops la mateixa nit, i el de frescor impedeix publicar una nit
 # que ja hagi comencat.
 #
-# Hores UTC (GitHub no fa cas de l'horari d'estiu). Les primeres execucions
-# reals van mostrar que el cron de GitHub s'endarrereix uns 2 h 25 min: el que
-# es programava per a les 19:30 s'executava a les 21:50, a deu minuts del limit
-# de frescor de les 22:00 UTC. Per aixo s'avancen les dues hores, de manera que
-# amb el retard tipic caiguin cap a les 17:00 i les 19:30 UTC i quedin unes
-# 2,5 h de marge per si algun dia el retard es mes gran.
+# Hores UTC (GitHub no fa cas de l'horari d'estiu). El cron de GitHub
+# s'endarrereix entre 2 i 3,5 hores segons la carrega, mesurat sobre les
+# primeres execucions reals. Amb el cron a les 11:00 i les 14:00, el post surt
+# cap a les 13:30 i 16:30 UTC (15:30 i 18:30 hora local a l'estiu), i queden
+# mes de cinc hores de marge fins al limit de frescor de les 22:00 UTC.
+#
+# LIMIT DUR: el cron no pot baixar de les 10:00 UTC. 16_pronostic.R tria la nit
+# objectiu mirant si ja han passat les 10 UTC; abans d'aquesta hora apuntaria a
+# la matinada del mateix dia, que ja ha passat.
 on:
   schedule:
-    - cron: "30 14 * * *"
-    - cron: "0 17 * * *"
+    - cron: "0 11 * * *"
+    - cron: "0 14 * * *"
   workflow_dispatch:          # permet llancar-lo a ma des de la web
     inputs:
       nomes_prova:
