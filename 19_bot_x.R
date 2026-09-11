@@ -127,7 +127,9 @@ linia_int <- if (pc >= 25)
 # A l'estiu el gruix del drenatge es entre les 6 i les 9: la mitjana de tota la
 # finestra queda baixa i el post semblaria dir que no fara aire, quan a primera
 # hora si que en fa. Quan el tram fort destaca clarament, s'avisa.
-linia_1a <- if (!is.na(p$u_1a_pred) && !is.na(p$u_mati_pred) &&
+# hi ha valor? (NULL si la columna encara no existeix al registre, NA si falta)
+te <- function(x) length(x) == 1L && !is.na(x)
+linia_1a <- if (te(p$u_1a_pred) && te(p$u_mati_pred) &&
                 p$u_1a_pred - p$u_mati_pred >= 2.5 && p$u_1a_pred >= 8)
   sprintf("Més marcat a primera hora: ~%.0f km/h fins a les 9 h", p$u_1a_pred) else NULL
 linia_hora <- if (pc >= 40)
