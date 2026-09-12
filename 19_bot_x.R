@@ -120,29 +120,49 @@ prep_mes <- if (m_i %in% c(4, 8, 10)) "d'" else "de "
 data_txt <- sprintf("%s%d %s%s", art_dia, dia_n, prep_mes, mesos[m_i])
 
 # 1F4A8 ratxa de vent | 1F343 fulla al vent | 1F305 alba: calma, no son
-emoji <- if (pc >= 75) "\U0001F4A8" else if (pc >= 40) "\U0001F343" else "\U0001F305"
-linia_int <- if (pc >= 25)
-  sprintf("Intensitat esperada: %.0f km/h", p$u_mati_pred) else
-  "No far\u00e0 gaire aire, segurament"
-# A l'estiu el gruix del drenatge es entre les 6 i les 9: la mitjana de tota la
-# finestra queda baixa i el post semblaria dir que no fara aire, quan a primera
-# hora si que en fa. Quan el tram fort destaca clarament, s'avisa.
 # hi ha valor? (NULL si la columna encara no existeix al registre, NA si falta)
 te <- function(x) length(x) == 1L && !is.na(x)
+
+# L'emoji surt de la INTENSITAT esperada, no de la probabilitat: es mes
+# intuitiu que un mati de 12 km/h gairebe segurs no porti cara de calma.
+emoji <- if (te(p$u_mati_pred) && p$u_mati_pred >= 14) "\U0001F4A8" else
+         if (te(p$u_mati_pred) && p$u_mati_pred >=  8) "\U0001F343" else "\U0001F305"
+adjectiu <- function(u) {
+  if (!te(u)) return("")
+  if (u >= 17) " (molt forta)" else if (u >= 14) " (forta)"   else
+  if (u >= 11) " (moderada)"   else if (u >=  8) " (suau)"    else
+  if (u >=  6) " (molt suau)"  else ""
+}
+# La intensitat esperada surt SEMPRE. Amb un sol llindar, un mati de 9,6 km/h
+# previstos es publicava com a "no fara gaire aire" quan era exactament una
+# saligarda lleugera: el model ho sabia i el post ho llencava.
+linia_int <- if (te(p$u_mati_pred))
+  sprintf("Intensitat esperada: ~%.0f km/h%s", p$u_mati_pred, adjectiu(p$u_mati_pred)) else
+  "No far\u00e0 gaire aire, segurament"
+
+# Escala de probabilitats acumulades, en comptes d'una sola pregunta binaria.
+esc <- list(p$p8, p$p11, p$p14)
+linia_esc <- if (all(vapply(esc, te, logical(1))))
+  sprintf("Prob.: \u22658 km/h %.0f %% \u00b7 \u226511 %.0f %% \u00b7 \u226514 %.0f %%",
+          100*esc[[1]], 100*esc[[2]], 100*esc[[3]]) else
+  sprintf("Probabilitat: %d %%", pc)
+
+# A l'estiu el gruix del drenatge es entre les 6 i les 9: la mitjana de tota la
+# finestra queda baixa i el post semblaria dir que no fara aire quan a primera
+# hora si que en fa. Quan el tram fort destaca clarament, s'avisa.
 linia_1a <- if (te(p$u_1a_pred) && te(p$u_mati_pred) &&
                 p$u_1a_pred - p$u_mati_pred >= 2.5 && p$u_1a_pred >= 8)
-  sprintf("Més marcat a primera hora: ~%.0f km/h fins a les 9 h", p$u_1a_pred) else NULL
-linia_hora <- if (pc >= 40)
+  sprintf("M\u00e9s marcat a primera hora: ~%.0f km/h fins a les 9 h", p$u_1a_pred) else NULL
+linia_hora <- if (te(p$p11) && p$p11 >= 0.5)
   sprintf("M\u00e0xim cap a les %d h, afluixa cap a les %d h",
           hora_local(p$pic_utc, nit), hora_local(p$final_utc, nit)) else NULL
 # \u00b0 es el simbol de grau; \u00ba es l'ordinal masculi i no toca aqui
-linia_wc <- if (!is.na(p$wc_min_pred) && p$wc_min_pred <= 5)
+linia_wc <- if (te(p$wc_min_pred) && p$wc_min_pred <= 5)
   sprintf("Sensaci\u00f3 m\u00ednima: %.0f \u00b0C", p$wc_min_pred) else NULL
 
 text <- paste(c(
   sprintf("%s Saligarda \u00b7 mat\u00ed %s", emoji, data_txt),
-  sprintf("Probabilitat: %d %%", pc),
-  linia_int, linia_1a, linia_hora, linia_wc,
+  linia_int, linia_esc, linia_1a, linia_hora, linia_wc,
   "#laGarriga #Congost"), collapse = "\n")
 
 cat("\n---------------- post ----------------\n"); cat(text, "\n")

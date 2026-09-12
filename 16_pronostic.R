@@ -85,6 +85,14 @@ int_bot <- if (!is.null(MODEL$intensitat_bot))
 # i la mitjana de 6-11 amaga que a primera hora si que bufava
 int_1a <- if (!is.null(MODEL$intensitat_primera))
   predict(MODEL$intensitat_primera, p)$predictions else NA_real_
+# Escala d'intensitat: probabilitats acumulades P(u >= L) per a cada llindar.
+# Es forcen decreixents: dos models independents podrien donar, per atzar,
+# P(>=11) > P(>=8), cosa impossible per definicio.
+probs <- if (!is.null(MODEL$ocurrencia_bandes)) {
+  v <- vapply(MODEL$ocurrencia_bandes,
+              function(m) predict(m, p)$predictions[, "1"], numeric(1))
+  cummin(v)
+} else NULL
 # cicle horari tipic de l'estacio de l'any corresponent (hores UTC)
 est_nit <- c("DJF","DJF","MAM","MAM","MAM","JJA","JJA","JJA",
              "SON","SON","SON","DJF")[as.integer(format(nit, "%m"))]
@@ -106,6 +114,9 @@ linies <- c(
   sprintf("  MATI (%s):", MODEL$finestra_bot %||% "6-11 hora local"),
   sprintf("    probabilitat (>= %d km/h) . %3.0f %%", MODEL$llindar_bot %||% 14, 100*pro_bot),
   sprintf("    intensitat esperada ....... %4.1f km/h", int_bot),
+  sprintf("    tram 6-9 h ................ %4.1f km/h", int_1a),
+  if (!is.null(probs)) paste0("    escala .................... ",
+      paste(sprintf(">=%s %2.0f%%", names(probs), 100*probs), collapse = " | ")) else NULL,
   sprintf("  Intensitat esperada .......... %4.1f km/h  -> %s", int, categoria),
   sprintf("  Sensacio de fred minima ...... %4.1f C", wc),
   "",
@@ -131,6 +142,9 @@ writeLines(linies, "pronostic.txt")
 reg <- data.table(emes = format(ara, "%Y-%m-%d %H:%M"), nit = as.character(nit),
                   p_saligarda = round(pro, 3), p_bot = round(pro_bot, 3),
                   u_mati_pred = round(int_bot, 2), u_1a_pred = round(int_1a, 2),
+                  p8 = if (!is.null(probs)) round(probs[["8"]], 3) else NA_real_,
+                  p11 = if (!is.null(probs)) round(probs[["11"]], 3) else NA_real_,
+                  p14 = if (!is.null(probs)) round(probs[["14"]], 3) else NA_real_,
                   pic_utc = pic_utc, final_utc = final_utc,
                   u_dv_pred = round(int, 2),
                   wc_min_pred = round(wc, 2), categoria = categoria,

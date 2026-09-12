@@ -138,6 +138,11 @@ d[, `:=`(sal = as.integer(saligarda), sal_f = factor(as.integer(saligarda), leve
 # El llindar puja de 12 a 14 km/h perque la finestra del mati exclou les
 # hores fluixes de la matinada; amb 14 surten uns 48 dies l'any.
 LLINDAR_BOT <- 14
+# El bot no publica una sola pregunta binaria sino una escala. Un dia amb 9,6
+# km/h previstos es una saligarda lleugera de debo, i amb un sol llindar de 14
+# el post deia "no fara gaire aire" i llencava aquesta informacio. Amb els tres
+# llindars acumulats es pot dir "es notara segur, forta probablement no".
+LLINDARS_BOT <- c(8L, 11L, 14L)
 gm <- fread("derived/garriga_treball.csv")
 gm[, datetime := as.POSIXct(datetime, tz = "UTC")]
 gm[, h_loc := as.integer(format(datetime, tz = "Europe/Madrid", format = "%H"))]
@@ -157,6 +162,9 @@ idx_mati <- gm[h_loc >= 6 & h_loc < 11, .(
 d <- merge(d, idx_mati, by = "date", all.x = TRUE)
 d <- merge(d, idx_primera, by = "date", all.x = TRUE)
 d[, sal12_f := factor(as.integer(u_mati >= LLINDAR_BOT & R_mati >= 0.7), levels = c(0,1))]
+for (L in LLINDARS_BOT)
+  d[, (paste0("sal", L, "_f")) :=
+      factor(as.integer(u_mati >= L & R_mati >= 0.7), levels = c(0,1))]
 d <- d[any %in% 2013:2023]
 OMV <- grep("^om_", names(d), value = TRUE)
 STV <- grep("^st_", names(d), value = TRUE)
@@ -276,7 +284,13 @@ final <- list(
                               min.node.size = MIN_NODE),
   ocurrencia_bot = ranger(as.formula(paste("sal12_f ~", paste(c(EST, OMV), collapse = " + "))),
                           d_bot, num.trees = NUM_TREES, min.node.size = MIN_NODE, probability = TRUE),
-  llindar_bot = LLINDAR_BOT, finestra_bot = "6-11 hora local",
+  llindar_bot = LLINDAR_BOT, llindars_bot = LLINDARS_BOT,
+  finestra_bot = "6-11 hora local",
+  # un model per llindar: donen probabilitats acumulades P(u >= L)
+  ocurrencia_bandes = setNames(lapply(LLINDARS_BOT, function(L)
+      ranger(as.formula(paste0("sal", L, "_f ~", paste(c(EST, OMV), collapse = " + "))),
+             d_bot, num.trees = NUM_TREES, min.node.size = MIN_NODE, probability = TRUE)),
+    as.character(LLINDARS_BOT)),
   sensacio   = ranger(as.formula(paste("wc_min ~", paste(c(EST, OMV), collapse = " + "))),
                       d_tot[!is.na(wc_min)], num.trees = NUM_TREES, min.node.size = MIN_NODE),
   vars = c(EST, OMV), punts = NULL,
