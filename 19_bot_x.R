@@ -58,7 +58,9 @@ if (!is.null(v <- arg_val("p")))    p$p_bot <- as.numeric(v)
 if (!is.null(v <- arg_val("u")))    p$u_mati_pred <- as.numeric(v)
 if (!is.null(v <- arg_val("u1")))   p$u_1a_pred <- as.numeric(v)
 if (!is.null(v <- arg_val("wc")))   p$wc_min_pred <- as.numeric(v)
-SIMULAT <- length(grep("^--(nit|p|u1|u|wc)=", commandArgs(TRUE))) > 0
+for (L in c("8", "11", "14"))
+  if (!is.null(v <- arg_val(paste0("p", L)))) p[[paste0("p", L)]] <- as.numeric(v)
+SIMULAT <- length(grep("^--(nit|p8|p11|p14|p|u1|u|wc)=", commandArgs(TRUE))) > 0
 if (SIMULAT) {
   if (!NOMES_PROVA) stop("la simulacio nomes te sentit amb --prova")
   cat("[SIMULACIO: valors forcats des de la linia d'ordres]\n")
@@ -131,7 +133,7 @@ adjectiu <- function(u) {
   if (!te(u)) return("")
   if (u >= 17) " (molt forta)" else if (u >= 14) " (forta)"   else
   if (u >= 11) " (moderada)"   else if (u >=  8) " (suau)"    else
-  if (u >=  6) " (molt suau)"  else ""
+  if (u >=  6) " (molt suau)"  else " (pràcticament calma)"
 }
 # La intensitat esperada surt SEMPRE. Amb un sol llindar, un mati de 9,6 km/h
 # previstos es publicava com a "no fara gaire aire" quan era exactament una
@@ -146,6 +148,19 @@ linia_esc <- if (all(vapply(esc, te, logical(1))))
   sprintf("Prob.: \u22658 km/h %.0f %% \u00b7 \u226511 %.0f %% \u00b7 \u226514 %.0f %%",
           100*esc[[1]], 100*esc[[2]], 100*esc[[3]]) else
   sprintf("Probabilitat: %d %%", pc)
+
+# Quan la probabilitat central es a prop de la moneda a l'aire, el post es
+# llegeix igual que un de segur i no ho es. El cas mes util de senyalar es
+# justament aquest: no sabem de quina banda cau.
+# El dubte no es sempre el mateix: a vegades no sabem SI es notara, i a
+# vegades ja sabem que si pero no QUANT. Cal dir-ho be o el missatge enganya.
+dubtos <- function(x) te(x) && x >= 0.35 && x <= 0.65
+linia_dubte <- if (dubtos(p$p8))
+  "Matí dubtós: tant pot quedar en no-res com notar-se" else
+  if (dubtos(p$p11))
+  "Es notarà, però no està clar si arribarà a moderada" else
+  if (dubtos(p$p14))
+  "Podria arribar a forta, però no és segur" else NULL
 
 # A l'estiu el gruix del drenatge es entre les 6 i les 9: la mitjana de tota la
 # finestra queda baixa i el post semblaria dir que no fara aire quan a primera
@@ -162,7 +177,7 @@ linia_wc <- if (te(p$wc_min_pred) && p$wc_min_pred <= 5)
 
 text <- paste(c(
   sprintf("%s Saligarda \u00b7 mat\u00ed %s", emoji, data_txt),
-  linia_int, linia_esc, linia_1a, linia_hora, linia_wc,
+  linia_int, linia_esc, linia_dubte, linia_1a, linia_hora, linia_wc,
   "#laGarriga #Congost"), collapse = "\n")
 
 cat("\n---------------- post ----------------\n"); cat(text, "\n")
