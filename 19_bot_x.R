@@ -142,7 +142,10 @@ linia_int <- if (te(p$u_mati_pred))
   sprintf("Intensitat esperada: ~%.0f km/h%s", p$u_mati_pred, adjectiu(p$u_mati_pred)) else
   "No far\u00e0 gaire aire, segurament"
 
-# Escala de probabilitats acumulades, en comptes d'una sola pregunta binaria.
+# L'escala i la linia de dubte es calculen igualment i van a parar al butlleti
+# i a derived/pronostics.csv, pero NO al post: al post hi va nomes el resultat
+# mes probable. Menys soroll per a qui el llegeix cada dia; la incertesa queda
+# registrada per poder verificar la destresa mes endavant.
 esc <- list(p$p8, p$p11, p$p14)
 linia_esc <- if (all(vapply(esc, te, logical(1))))
   sprintf("Prob.: \u22658 km/h %.0f %% \u00b7 \u226511 %.0f %% \u00b7 \u226514 %.0f %%",
@@ -177,7 +180,7 @@ linia_wc <- if (te(p$wc_min_pred) && p$wc_min_pred <= 5)
 
 text <- paste(c(
   sprintf("%s Saligarda \u00b7 mat\u00ed %s", emoji, data_txt),
-  linia_int, linia_esc, linia_dubte, linia_1a, linia_hora, linia_wc,
+  linia_int, linia_1a, linia_hora, linia_wc,
   "#laGarriga #Congost"), collapse = "\n")
 
 cat("\n---------------- post ----------------\n"); cat(text, "\n")
