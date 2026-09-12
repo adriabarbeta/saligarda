@@ -284,6 +284,18 @@ final <- list(
                               min.node.size = MIN_NODE),
   ocurrencia_bot = ranger(as.formula(paste("sal12_f ~", paste(c(EST, OMV), collapse = " + "))),
                           d_bot, num.trees = NUM_TREES, min.node.size = MIN_NODE, probability = TRUE),
+  # Un bosc de regressio prediu la mitjana condicional, que s'encongeix cap al
+  # centre: els matins de saligarda molt forta (19 km/h reals) sortien anunciats
+  # a 13. Estirant la dispersio un 20% al voltant de la mitjana d'entrenament,
+  # el biaix dels dies forts passa de -4,4 a -3,5 km/h i, alhora, milloren el
+  # RMSE (3,48 -> 3,46) i l'encert de l'adjectiu (44% -> 46%). Amb el factor
+  # complet (1,54) el biaix baixaria a -2,0 pero el RMSE pujaria a 3,70.
+  # Cal inflar TOTES DUES: la linia de primera hora del bot salta quan la
+  # diferencia u_primera - u_mati supera 2,5 km/h. Inflant nomes una de les
+  # dues, aquesta diferencia s'encongiria i la linia gairebe no sortiria mai.
+  calibratge = list(k = 1.2,
+                    centre    = mean(d_bot$u_mati,    na.rm = TRUE),
+                    centre_1a = mean(d_bot$u_primera, na.rm = TRUE)),
   llindar_bot = LLINDAR_BOT, llindars_bot = LLINDARS_BOT,
   finestra_bot = "6-11 hora local",
   # un model per llindar: donen probabilitats acumulades P(u >= L)

@@ -85,6 +85,16 @@ int_bot <- if (!is.null(MODEL$intensitat_bot))
 # i la mitjana de 6-11 amaga que a primera hora si que bufava
 int_1a <- if (!is.null(MODEL$intensitat_primera))
   predict(MODEL$intensitat_primera, p)$predictions else NA_real_
+
+# Correccio de l'encongiment cap al centre (vegeu 15_model_operatiu.R). Cal
+# aplicar-la a les dues intensitats amb el mateix factor: la linia de primera
+# hora del bot depen de la diferencia entre totes dues.
+estira <- function(x, centre) {
+  if (is.null(MODEL$calibratge) || is.null(centre) || !isTRUE(!is.na(x))) return(x)
+  centre + (x - centre) * MODEL$calibratge$k
+}
+int_bot <- estira(int_bot, MODEL$calibratge$centre)
+int_1a  <- estira(int_1a,  MODEL$calibratge$centre_1a)
 # Escala d'intensitat: probabilitats acumulades P(u >= L) per a cada llindar.
 # Es forcen decreixents: dos models independents podrien donar, per atzar,
 # P(>=11) > P(>=8), cosa impossible per definicio.
@@ -162,7 +172,20 @@ if (file.exists(REG)) {
     cat("Esquema del registre canviat; l'anterior s'ha desat a", nou_nom, "\n")
   }
 }
-fwrite(reg, REG, append = file.exists(REG))
+# Una nit, una fila. El workflow s'executa dos cops al dia i, si el primer
+# intent ja havia escrit, el segon nomes n'ha d'actualitzar la prediccio amb
+# les dades mes fresques. Si no, el registre acumularia duplicats i la
+# verificacio posterior contra les observacions els comptaria dos cops.
+# (el valor es treu fora dels claudators a proposit: dins de data.table, un
+#  nom que coincideix amb una columna s'hi resol i el filtre no faria res)
+nit_txt <- as.character(reg$nit)
+if (file.exists(REG)) {
+  previ <- fread(REG, colClasses = "character")
+  if (identical(names(previ), names(reg)))
+    reg <- rbind(previ[as.character(nit) != nit_txt],
+                 reg[, lapply(.SD, as.character)])
+}
+fwrite(reg, REG)
 
 # --- butlleti HTML -----------------------------------------------------------
 col <- if (pro >= 0.66) "#B2182B" else if (pro >= 0.33) "#E08214" else "#2166AC"
