@@ -9,9 +9,9 @@ publica el pronòstic diari.
 
 ## El bot
 
-Cada vespre calcula la probabilitat que **el matí següent, de 6 a 11 hora
-local**, hi hagi Saligarda (component mitjana vall avall ≥ 14 km/h) i en
-publica un post.
+Cada vespre pronostica quina Saligarda farà **el matí següent, de 6 a 11 hora
+local**, i en publica un post: la intensitat esperada en km/h (component mitjana
+vall avall) i un adjectiu.
 
 La finestra és la que viu la gent, no la de l'estudi (00–10 UTC). A l'hivern
 coincideix amb el màxim del drenatge: entre les 6 i les 9 del matí la component
@@ -21,11 +21,14 @@ directament sobre aquest tram el prediu millor que reciclar el model nocturn
 nit sencera perquè és quan el drenatge s'apaga, i el moment exacte depèn de com
 d'aviat escalfi el sol el fons de vall.
 
-Publica la **probabilitat**, no un sí o un no: el model està ben calibrat, de
-manera que un 62 % vol dir 62 % i el post no pot ser mai fals.
-
 Destresa del model del matí, validada deixant un any sencer fora: **AUC 0,890**
 i R² 0,533 per a la intensitat. Uns 48 episodis l'any.
+
+Sobre el número que es publica: l'error mitjà és de 2,3 km/h i l'adjectiu és
+exacte el 46 % dels dies, a una banda de distància el 83 %. La predicció porta
+una correcció de l'encongiment cap a la mitjana (§ 2.12 de l'informe); sense
+ella, els matins de Saligarda molt forta —19 km/h de mitjana real— sortien
+anunciats a 13.
 
 ### Com funciona
 
@@ -43,7 +46,8 @@ cops la mateixa nit o publicar una nit que ja hagi començat.
 
 ```bash
 Rscript 19_bot_x.R --prova
-Rscript 19_bot_x.R --prova --p=0.72 --u=14 --wc=-2 --nit=2026-01-15
+Rscript 19_bot_x.R --prova --u=14 --u1=17 --wc=-2 --nit=2026-01-15
+Rscript 19_bot_x.R --verifica
 ```
 
 A Windows, `prova.bat` fa el mateix sense haver d'escriure la ruta d'R.

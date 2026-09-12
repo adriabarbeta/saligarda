@@ -428,8 +428,9 @@ estadística, digui exactament el mateix. Figures **F11**, **F14** i **F17**.
 
 El rumb del Congost des de la Garriga cap amunt, calculat amb les coordenades dels
 nuclis del fons de vall, és de **350° cap al Figaró, 344° cap a Aiguafreda i 338° cap
-a Centelles**. La direcció mesurada del vent nocturn, en canvi, és de 22,9°: uns
-**41° de diferència**.
+a Centelles**. La direcció mesurada del vent nocturn, en canvi, és de 22,9°: una
+trentena llarga de graus de diferència, que la resta de la secció quantifica en
+**+32°**.
 
 El full de l'Ajuntament permet resoldre-ho, perquè hi consta la direcció **en graus
 reals fins al 2010** (95–117 valors diferents per any) i en **rumbs de 16 a partir
@@ -444,7 +445,7 @@ del 2012** (20–24 valors). Direcció de les ratxes ≥ 30 km/h del semicercle 
 | 2012–2023 | 15° (rang 7–27) | 0,82 |
 
 Entre el 2003 i el 2008 la mesura coincideix **exactament** amb el rumb de la vall.
-Després gira ~40° en sentit horari, de manera **gradual entre 2009 i 2011**. Per
+Després gira ~32° en sentit horari, de manera **gradual entre 2009 i 2011**. Per
 octants, la cua del NO (31 % dels dies abans del 2011) es converteix en una cua del
 NE (25 % després).
 
@@ -609,16 +610,69 @@ ser exactament el que s'executa.
 
 #### Bot de publicació diària
 
-`19_bot_x.R` publica cada vespre a X la **probabilitat** d'episodi que es noti
-(`u_dv ≥ 12 km/h`), no un sí/no: com que el model està ben calibrat, un 62 % vol dir
-62 % i el post no pot ser mai fals. Sense enllaços, perquè a X un post amb enllaç
-costa 0,20 $ i un sense, 0,015 $ — un post diari surt per uns 5,5 $ l'any.
+`19_bot_x.R` publica cada vespre a X el pronòstic per al **matí següent de 6 a 11
+hora local**, la finestra que viu la gent, no la de l'estudi (00–10 UTC). Sense
+enllaços, perquè a X un post amb enllaç costa 0,20 $ i un sense, 0,015 $ — un post
+diari surt per uns 5,5 $ l'any.
+
+La primera versió publicava la **probabilitat** d'episodi, que té la virtut de no
+poder ser mai falsa: amb un model ben calibrat, un 62 % vol dir 62 %. Però un
+número que mai no s'equivoca tampoc no diu gran cosa a qui ha de decidir si
+s'emporta el tallavents, i deixava muda la brisa fluixa, que és la més freqüent.
+La versió actual publica **la intensitat esperada en km/h i un adjectiu**, i
+accepta equivocar-se. Els llindars de l'adjectiu són 6, 8, 11, 14 i 17 km/h
+(pràcticament calma / molt suau / suau / moderada / forta / molt forta).
+
+#### Calibratge de la intensitat publicada
+
+Un bosc de regressió prediu la **mitjana condicional**, que per construcció
+s'encongeix cap al centre de la distribució: la desviació típica de les
+prediccions és de 3,3 km/h contra 5,2 de les observacions. Això, que és correcte
+com a estimador, és dolent com a missatge. En validació any a any el biaix era
+sistemàtic i anava tot en la mateixa direcció:
+
+| Banda observada | Real (km/h) | El bot deia | Biaix |
+|---|---|---|---|
+| pràcticament calma | 2,8 | 5,4 | +2,7 |
+| molt suau | 7,0 | 7,2 | +0,3 |
+| suau | 9,4 | 8,5 | −0,9 |
+| moderada | 12,4 | 10,1 | −2,4 |
+| forta | 15,3 | 11,7 | −3,6 |
+| molt forta | 19,2 | 13,1 | **−6,1** |
+
+Els matins de Saligarda molt forta —els únics que la gent recorda i pels quals
+jutjarà el bot— sortien anunciats com a moderats. La correcció aplicada estira la
+dispersió al voltant de la mitjana d'entrenament, `x = m + (p − m)·k`. El factor
+que igualaria del tot les variàncies seria k = 1,54, però costa precisió; amb
+**k = 1,2** milloren les tres mesures alhora, cosa que no sol passar:
+
+| k | RMSE | Adjectiu exacte | ±1 banda | Biaix dies forts |
+|---|---|---|---|---|
+| 1,00 (sense corregir) | 3,48 | 44 % | 83 % | −4,4 |
+| **1,20** | **3,46** | **46 %** | 83 % | **−3,5** |
+| 1,54 (inflació completa) | 3,70 | 46 % | 81 % | −2,0 |
+
+S'aplica a les **dues** intensitats que publica el post, la de 6–11 i la del tram
+6–9, amb el mateix factor i cadascuna al voltant del seu centre: la línia «més
+marcat a primera hora» salta quan la diferència entre totes dues supera 2,5 km/h,
+i inflar-ne només una l'hauria feta emmudir.
+
+L'ordre de magnitud de l'error que veurà el lector: mediana 2,3 km/h, dins de
+±4 km/h el 77 % dels dies i de ±6 el 92 %.
+
+#### Operació
 
 Les credencials no són al projecte: van a `%USERPROFILE%/.saligarda_x.json`. Si el
 fitxer no hi és, el script redacta el post i el desa a `post_x.txt` però no envia
 res. `derived/posts_x.csv` registra què s'ha publicat i quan, i hi ha un guard que
-evita repetir la mateixa nit. Amb `--prova` es pot assajar sense enviar, i amb
-`--p=` / `--u=` / `--nit=` es pot simular qualsevol nit per veure el format.
+evita repetir la mateixa nit. Amb `--prova` es pot assajar sense enviar; amb
+`--verifica`, comprovar les credencials sense publicar; i amb `--nit=` / `--p=` /
+`--u=` / `--u1=` / `--wc=` es pot simular qualsevol nit per veure el format.
+
+`derived/pronostics.csv` guarda **una fila per nit**: el workflow s'executa dos
+cops al dia per cobrir els retards del cron de GitHub, i el segon intent
+actualitza la predicció en lloc d'afegir-ne una de nova. Si acumulés duplicats,
+la verificació posterior contra les observacions els comptaria dos cops.
 
 ---
 
@@ -627,7 +681,7 @@ evita repetir la mateixa nit. Amb `--prova` es pot assajar sense enviar, i amb
 1. **Longitud del registre.** Dotze anys homogenis. Cap conclusió sobre tendències
    climàtiques és possible amb aquesta longitud.
 2. **Ruptura del 2011.** Ara amb dos símptomes: salt de +4,4 km/h a la ratxa i
-   rotació de ~41° de la direcció (§ 2.10). Convindria buscar la metadada de
+   rotació de ~32° de la direcció (§ 2.10). Convindria buscar la metadada de
    l'estació —canvi d'anemòmetre, de pal o d'emplaçament— per confirmar-la i, si és
    possible, homogeneïtzar la sèrie 2002–2010, que és la que quadra amb el terreny.
 3. **Direcció en 16 rumbs** (només des del 2012; abans en graus reals) i associada a
