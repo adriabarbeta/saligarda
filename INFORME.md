@@ -631,34 +631,40 @@ prediccions és de 3,3 km/h contra 5,2 de les observacions. Això, que és corre
 com a estimador, és dolent com a missatge. En validació any a any el biaix era
 sistemàtic i anava tot en la mateixa direcció:
 
-| Banda observada | Real (km/h) | El bot deia | Biaix |
-|---|---|---|---|
-| pràcticament calma | 2,8 | 5,4 | +2,7 |
-| molt suau | 7,0 | 7,2 | +0,3 |
-| suau | 9,4 | 8,5 | −0,9 |
-| moderada | 12,4 | 10,1 | −2,4 |
-| forta | 15,3 | 11,7 | −3,6 |
-| molt forta | 19,2 | 13,1 | **−6,1** |
+| Banda observada | n | Real (km/h) | Sense corregir | Biaix | Amb k = 1,5 | Biaix |
+|---|---|---|---|---|---|---|
+| pràcticament calma | 1.480 | 2,8 | 5,4 | +2,7 | 4,4 | +1,6 |
+| molt suau | 582 | 7,0 | 7,2 | +0,3 | 7,0 | 0,0 |
+| suau | 760 | 9,4 | 8,5 | −0,9 | 8,9 | −0,6 |
+| moderada | 526 | 12,4 | 10,1 | −2,4 | 11,2 | −1,2 |
+| forta | 350 | 15,3 | 11,7 | −3,6 | 13,7 | −1,6 |
+| molt forta | 157 | 19,2 | 13,1 | **−6,1** | 15,8 | **−3,4** |
 
 Els matins de Saligarda molt forta —els únics que la gent recorda i pels quals
 jutjarà el bot— sortien anunciats com a moderats. La correcció aplicada estira la
 dispersió al voltant de la mitjana d'entrenament, `x = m + (p − m)·k`. El factor
-que igualaria del tot les variàncies seria k = 1,54, però costa precisió; amb
-**k = 1,2** milloren les tres mesures alhora, cosa que no sol passar:
+que igualaria del tot les variàncies és k = 1,55:
 
-| k | RMSE | Adjectiu exacte | ±1 banda | Biaix dies forts |
-|---|---|---|---|---|
-| 1,00 (sense corregir) | 3,48 | 44 % | 83 % | −4,4 |
-| **1,20** | **3,46** | **46 %** | 83 % | **−3,5** |
-| 1,54 (inflació completa) | 3,70 | 46 % | 81 % | −2,0 |
+| k | RMSE | Adjectiu exacte | ±1 banda | Dins de ±4 km/h | Biaix dies forts |
+|---|---|---|---|---|---|
+| 1,00 (sense corregir) | 3,48 | 44 % | 83 % | 76 % | −4,4 |
+| 1,20 | **3,45** | **46 %** | **83 %** | **77 %** | −3,5 |
+| **1,50 (desplegat)** | 3,65 | 45 % | 81 % | 75 % | **−2,2** |
+
+El valor desplegat **no és l'òptim estadístic**. En RMSE i en encert de la banda
+guanya k = 1,2; k = 1,5 costa 0,2 de RMSE i dos punts de ±1 banda, i a canvi
+redueix el biaix dels matins forts de −3,5 a −2,2 km/h. És una decisió de
+comunicació presa a consciència: el cost es paga en dies mitjans, que ningú no
+recorda, i el guany es cobra en els matins forts, que són els que es comenten.
+Fins i tot així, la banda més alta continua sortint −3,4 km/h curta.
 
 S'aplica a les **dues** intensitats que publica el post, la de 6–11 i la del tram
 6–9, amb el mateix factor i cadascuna al voltant del seu centre: la línia «més
 marcat a primera hora» salta quan la diferència entre totes dues supera 2,5 km/h,
 i inflar-ne només una l'hauria feta emmudir.
 
-L'ordre de magnitud de l'error que veurà el lector: mediana 2,3 km/h, dins de
-±4 km/h el 77 % dels dies i de ±6 el 92 %.
+L'ordre de magnitud de l'error que veurà el lector: mediana 2,3 km/h i dins de
+±4 km/h el 75 % dels dies.
 
 #### Operació
 

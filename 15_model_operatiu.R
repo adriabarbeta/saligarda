@@ -285,15 +285,21 @@ final <- list(
   ocurrencia_bot = ranger(as.formula(paste("sal12_f ~", paste(c(EST, OMV), collapse = " + "))),
                           d_bot, num.trees = NUM_TREES, min.node.size = MIN_NODE, probability = TRUE),
   # Un bosc de regressio prediu la mitjana condicional, que s'encongeix cap al
-  # centre: els matins de saligarda molt forta (19 km/h reals) sortien anunciats
-  # a 13. Estirant la dispersio un 20% al voltant de la mitjana d'entrenament,
-  # el biaix dels dies forts passa de -4,4 a -3,5 km/h i, alhora, milloren el
-  # RMSE (3,48 -> 3,46) i l'encert de l'adjectiu (44% -> 46%). Amb el factor
-  # complet (1,54) el biaix baixaria a -2,0 pero el RMSE pujaria a 3,70.
-  # Cal inflar TOTES DUES: la linia de primera hora del bot salta quan la
-  # diferencia u_primera - u_mati supera 2,5 km/h. Inflant nomes una de les
-  # dues, aquesta diferencia s'encongiria i la linia gairebe no sortiria mai.
-  calibratge = list(k = 1.2,
+  # centre: sense corregir, els matins de saligarda molt forta (19,2 km/h reals
+  # de mitjana) sortien anunciats a 13,1. S'estira la dispersio al voltant de la
+  # mitjana d'entrenament: x = m + (p - m)*k. El factor que igualaria del tot
+  # les variancies es 1,55; s'adopta 1,5, que es gairebe tot el recorregut.
+  #
+  #   k     RMSE  adjectiu  +-1 banda  biaix forts  biaix calma  dins +-4 km/h
+  #   1,0   3,48    44%        83%        -4,4         +2,7          76%
+  #   1,2   3,45    46%        83%        -3,5         +2,3          77%
+  #   1,5   3,65    45%        81%        -2,2         +1,6          75%
+  #
+  # Es una decisio de comunicacio, no d'estadistica: 1,2 era optim en RMSE i
+  # en encert de la banda, pero deixava els matins forts -3,5 km/h curts. Amb
+  # 1,5 el biaix dels forts baixa a -2,2 a canvi de 0,2 de RMSE i de dos punts
+  # de +-1 banda. Els matins forts son els que la gent recorda.
+  calibratge = list(k = 1.5,
                     centre    = mean(d_bot$u_mati,    na.rm = TRUE),
                     centre_1a = mean(d_bot$u_primera, na.rm = TRUE)),
   llindar_bot = LLINDAR_BOT, llindars_bot = LLINDARS_BOT,

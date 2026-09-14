@@ -25,10 +25,10 @@ Destresa del model del matí, validada deixant un any sencer fora: **AUC 0,890**
 i R² 0,533 per a la intensitat. Uns 48 episodis l'any.
 
 Sobre el número que es publica: l'error mitjà és de 2,3 km/h i l'adjectiu és
-exacte el 46 % dels dies, a una banda de distància el 83 %. La predicció porta
+exacte el 45 % dels dies, a una banda de distància el 81 %. La predicció porta
 una correcció de l'encongiment cap a la mitjana (§ 2.12 de l'informe); sense
-ella, els matins de Saligarda molt forta —19 km/h de mitjana real— sortien
-anunciats a 13.
+ella, els matins de Saligarda molt forta —19,2 km/h de mitjana real— sortien
+anunciats a 13,1, i amb la correcció a 15,8.
 
 ### Com funciona
 
