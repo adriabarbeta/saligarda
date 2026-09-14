@@ -171,8 +171,12 @@ linia_dubte <- if (dubtos(p$p8))
 linia_1a <- if (te(p$u_1a_pred) && te(p$u_mati_pred) &&
                 p$u_1a_pred - p$u_mati_pred >= 2.5 && p$u_1a_pred >= 8)
   sprintf("M\u00e9s marcat a primera hora: ~%.0f km/h fins a les 9 h", p$u_1a_pred) else NULL
+# "s'atura", no "afluixa": final_utc es l'ULTIMA hora amb component vall
+# avall >= 5 km/h (06_index_saligarda.R), o sigui el final de l'episodi i no
+# una simple davallada. El drenatge ja ve afluixant des del pic; el que passa
+# a aquesta hora es que el sol desfa la inversio i el flux s'acaba del tot.
 linia_hora <- if (te(p$p11) && p$p11 >= 0.5)
-  sprintf("M\u00e0xim cap a les %d h, afluixa cap a les %d h",
+  sprintf("M\u00e0xim cap a les %d h, va afluixant i s'atura cap a les %d h",
           hora_local(p$pic_utc, nit), hora_local(p$final_utc, nit)) else NULL
 # \u00b0 es el simbol de grau; \u00ba es l'ordinal masculi i no toca aqui
 linia_wc <- if (te(p$wc_min_pred) && p$wc_min_pred <= 5)
