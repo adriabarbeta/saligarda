@@ -118,7 +118,7 @@ html <- sprintf('<!doctype html>
     function manual() {
       // Reserva per si writeText falla (Safari antic, permis denegat, o un clic
       // que el navegador no considera un gest de l\'usuari). execCommand esta
-      // desaprovat pero funciona a tot arreu i copia de deb\' i sincronament.
+      // desaprovat pero funciona a tot arreu i copia de debò i sincronament.
       var el = document.getElementById("msg");
       var r = document.createRange(); r.selectNodeContents(el);
       var s = getSelection(); s.removeAllRanges(); s.addRange(r);
