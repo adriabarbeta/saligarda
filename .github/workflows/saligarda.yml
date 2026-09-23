@@ -75,11 +75,19 @@ jobs:
             Rscript 19_bot_x.R
           fi
 
+      - name: Pagina per al canal de WhatsApp
+        if: always()
+        run: Rscript 20_whatsapp.R
+
+      # if: always() a proposit. Si la publicacio a X falla (sense credits,
+      # per exemple) el pronostic i la pagina del canal ja son fets i s'han
+      # de desar igualment; altrament quedaria en linia el missatge d'ahir.
       - name: Desar els registres
+        if: always()
         run: |
           git config user.name  "bot-saligarda"
           git config user.email "bot-saligarda@users.noreply.github.com"
-          git add derived/pronostics.csv derived/posts_x.csv pronostic.txt post_x.txt || true
+          git add derived/pronostics.csv derived/posts_x.csv pronostic.txt post_x.txt docs/index.html || true
           if git diff --staged --quiet; then
             echo "cap canvi a desar"
           else

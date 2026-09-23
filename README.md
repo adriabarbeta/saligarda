@@ -42,6 +42,23 @@ S'executa sol per GitHub Actions (`.github/workflows/saligarda.yml`), dos cops
 al dia per si el `cron` s'endarrereix; hi ha guards que impedeixen publicar dos
 cops la mateixa nit o publicar una nit que ja hagi començat.
 
+### Canal de WhatsApp
+
+Els canals de WhatsApp no tenen API oficial de Meta, i l'API oficial de
+missatgeria (Cloud API) factura per destinatari i per missatge: amb un centenar
+de seguidors costaria mes en un mes que X en deu anys. Els serveis que venen
+una "API de canals" piloten una sessio de WhatsApp Web i exposen el numero a un
+bloqueig.
+
+Per aixo la publicacio al canal es manual, pero preparada. `20_whatsapp.R`
+genera `docs/index.html` a partir del mateix text que s'ha publicat a X (sense
+els hashtags, que a WhatsApp no fan res, i amb el titol en negreta). La pagina
+es publica per GitHub Pages i es pensada per tenir-la a la pantalla d'inici del
+mobil: s'obre, es toca **Copiar** i s'enganxa al canal.
+
+Si el workflow ha fallat i el text que hi ha es d'un dia que ja ha passat, la
+pagina ho avisa en lloc de deixar-lo copiar en silenci.
+
 ### Provar-ho sense publicar
 
 ```bash
