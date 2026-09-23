@@ -116,10 +116,16 @@ html <- sprintf('<!doctype html>
       navigator.clipboard.writeText(t).then(fet, manual);
     } else { manual(); }
     function manual() {
-      // Safari antic i contextos sense clipboard: seleccionar i deixar copiar a ma
-      var r = document.createRange(); r.selectNodeContents(document.getElementById("msg"));
+      // Reserva per si writeText falla (Safari antic, permis denegat, o un clic
+      // que el navegador no considera un gest de l\'usuari). execCommand esta
+      // desaprovat pero funciona a tot arreu i copia de deb\' i sincronament.
+      var el = document.getElementById("msg");
+      var r = document.createRange(); r.selectNodeContents(el);
       var s = getSelection(); s.removeAllRanges(); s.addRange(r);
-      btn.textContent = "Selecciona-ho i copia";
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      if (ok) { s.removeAllRanges(); fet(); }
+      else { btn.textContent = "Selecciona-ho i copia"; }
     }
   });
   // El text es el de l\'últim post redactat. Si el workflow ha fallat, aquí hi
