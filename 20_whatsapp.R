@@ -27,6 +27,7 @@ if (length(ruta)) setwd(dirname(normalizePath(sub("--file=", "", ruta[1]))))
 
 REGISTRE <- "derived/posts_x.csv"
 SORTIDA  <- "docs/index.html"
+TEXT     <- "docs/missatge.txt"
 
 if (!file.exists(REGISTRE)) stop("no hi ha ", REGISTRE)
 reg <- fread(REGISTRE)
@@ -138,5 +139,12 @@ html <- sprintf('<!doctype html>
 
 if (!dir.exists("docs")) dir.create("docs")
 writeLines(html, SORTIDA, useBytes = TRUE)
-cat("-> ", SORTIDA, " (mati del ", nit, ")\n", sep = "")
+
+# El mateix missatge en text pla. La pagina d'index depen que GitHub Pages
+# estigui activat; aquest fitxer no depen de res, perque el visor de fitxers de
+# GitHub ja hi posa un boto de copiar i el mobil l'obre sense mes. Serveix de
+# reserva si algun dia Pages falla.
+writeLines(missatge, TEXT, useBytes = TRUE)
+
+cat("-> ", SORTIDA, " i ", TEXT, " (mati del ", nit, ")\n", sep = "")
 cat("\n", missatge, "\n\n", sep = "")

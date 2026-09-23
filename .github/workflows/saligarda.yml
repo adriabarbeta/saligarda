@@ -87,7 +87,7 @@ jobs:
         run: |
           git config user.name  "bot-saligarda"
           git config user.email "bot-saligarda@users.noreply.github.com"
-          git add derived/pronostics.csv derived/posts_x.csv pronostic.txt post_x.txt docs/index.html || true
+          git add derived/pronostics.csv derived/posts_x.csv pronostic.txt post_x.txt docs/index.html docs/missatge.txt || true
           if git diff --staged --quiet; then
             echo "cap canvi a desar"
           else
