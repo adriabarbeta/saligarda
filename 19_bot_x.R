@@ -290,7 +290,12 @@ cat(if (enviat) "PUBLICAT: " else "NO publicat: ", detall, "\n", sep = "")
 
 fwrite(data.table(moment = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
                   nit = as.character(nit), probabilitat = pc,
-                  u_mati_pred = p$u_mati_pred, enviat = enviat, detall = detall,
+                  # 'u_pred', no 'u_mati_pred': fwrite amb append no reescriu
+                  # la capcalera, i fins al 2026-09-10 aqui hi anava l'index
+                  # de la nit sencera (00-10 UTC). Del 2026-09-10 enca, es el
+                  # de 6-11 hora local. Son magnituds diferents: qui verifiqui
+                  # el registre ha de tallar per aquesta data.
+                  u_pred = p$u_mati_pred, enviat = enviat, detall = detall,
                   text = gsub("\n", " | ", text)),
        REGISTRE, append = file.exists(REGISTRE))
 
