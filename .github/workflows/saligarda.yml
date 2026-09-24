@@ -45,6 +45,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: r-lib/actions/setup-r@v2
+        id: r
         with:
           r-version: "release"
           use-public-rspm: true       # paquets binaris: instal.lacio en segons
@@ -75,8 +76,12 @@ jobs:
             Rscript 19_bot_x.R
           fi
 
+      # always() perque la pagina s'ha de refer encara que el pronostic o la
+      # publicacio a X hagin fallat. Pero nomes si R existeix: el 23/09/2026
+      # setup-r va petar i aquest pas, amb always() tot sol, va fallar tambe
+      # sense tenir-hi res a veure.
       - name: Pagina per al canal de WhatsApp
-        if: always()
+        if: always() && steps.r.conclusion == 'success'
         run: Rscript 20_whatsapp.R
 
       # if: always() a proposit. Si la publicacio a X falla (sense credits,
