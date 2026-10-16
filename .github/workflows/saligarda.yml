@@ -8,17 +8,23 @@ name: Pronostic diari de la Saligarda
 #
 # Hores UTC (GitHub no fa cas de l'horari d'estiu). El cron de GitHub
 # s'endarrereix entre 2 i 3,5 hores segons la carrega, mesurat sobre les
-# primeres execucions reals. Amb el cron a les 11:00 i les 14:00, el post surt
-# cap a les 13:30 i 16:30 UTC (15:30 i 18:30 hora local a l'estiu), i queden
-# mes de cinc hores de marge fins al limit de frescor de les 22:00 UTC.
+# execucions reals. Amb el cron a les 10:00 i les 13:00, el post surt cap a les
+# 12:30 i 15:30 UTC, es a dir entre les 14:30 i les 17:30 hora local.
 #
-# LIMIT DUR: el cron no pot baixar de les 10:00 UTC. 16_pronostic.R tria la nit
-# objectiu mirant si ja han passat les 10 UTC; abans d'aquesta hora apuntaria a
-# la matinada del mateix dia, que ja ha passat.
+# Des que el pronostic cobreix tambe la nit (21-6 local), el limit de frescor
+# de 19_bot_x.R son les 21:00 locals del dia anterior, no pas les 22:00 UTC
+# d'abans. Per aixo s'ha avancat el cron una hora: calen tres o quatre hores de
+# marge entre la segona passada i aquest limit.
+#
+# LIMIT DUR: el cron no pot baixar de les 10:00 UTC, i ara ja hi es just. 
+# 16_pronostic.R tria la nit objectiu mirant si ja han passat les 10 UTC; abans
+# d'aquesta hora apuntaria a la matinada del mateix dia, que ja ha passat. Si
+# algun dia cal publicar encara mes aviat, s'ha de canviar aquella regla
+# primer, no pas el cron.
 on:
   schedule:
-    - cron: "0 11 * * *"
-    - cron: "0 14 * * *"
+    - cron: "0 10 * * *"
+    - cron: "0 13 * * *"
   workflow_dispatch:          # permet llancar-lo a ma des de la web
     inputs:
       nomes_prova:
@@ -92,7 +98,7 @@ jobs:
         run: |
           git config user.name  "bot-saligarda"
           git config user.email "bot-saligarda@users.noreply.github.com"
-          git add derived/pronostics.csv derived/posts_x.csv pronostic.txt post_x.txt docs/index.html docs/missatge.txt || true
+          git add derived/pronostics.csv derived/pronostics_fins_*.csv derived/posts_x.csv pronostic.txt post_x.txt docs/index.html docs/missatge.txt || true
           if git diff --staged --quiet; then
             echo "cap canvi a desar"
           else

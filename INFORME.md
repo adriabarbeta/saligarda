@@ -610,8 +610,29 @@ ser exactament el que s'executa.
 
 #### Bot de publicació diària
 
-`19_bot_x.R` publica cada vespre a X el pronòstic per al **matí següent de 6 a 11
-hora local**, la finestra que viu la gent, no la de l'estudi (00–10 UTC). Sense
+`19_bot_x.R` publica cada tarda a X el pronòstic per a la nit i el matí
+següents: la **nit de 21 a 6** i el **matí de 6 a 11**, totes dues en hora
+local, que és la que viu la gent, no la de l'estudi (00–10 UTC).
+
+La finestra nocturna surt del cicle mitjà dels episodis: la component vall avall
+creua els 5 km/h cap a les 19–20 UTC —mediana d'inici −6 a l'hivern i −4 a
+l'estiu— i creix sense parar fins al màxim de 14 km/h a les 05–06 UTC. En hora
+local, doncs, 21–6 recull l'episodi des que s'engega fins que es fa de dia, i
+encaixa amb la del matí sense solapar-s'hi. Té una trampa de programació que
+val la pena deixar escrita: la finestra travessa la mitjanit i cal agrupar per
+**data local**, no per data UTC, perquè a l'estiu la una de la matinada local
+encara cau al dia UTC anterior i la nit quedaria tallada pel mig.
+
+En validació deixant un any fora dona **R² = 0,493** i RMSE de 2,84 km/h, una
+mica per sota del matí (0,533). La mitjana observada és de 6,8 km/h contra 7,86
+del matí: la nit surt més fluixa perquè la mitjana de nou hores inclou el
+vespre, quan el drenatge tot just arrenca.
+
+Que el post cobreixi la nit obliga a publicar-lo abans. El límit de frescor
+passa de les 22:00 UTC —que són les 00:00 locals, amb la nit ja en marxa— a les
+**21:00 locals del dia anterior**, i el cron s'avança una hora, a les 10:00 i
+les 13:00 UTC. Les 10:00 UTC són un límit dur: abans d'aquesta hora
+`16_pronostic.R` apuntaria a la matinada del mateix dia, que ja ha passat. Sense
 enllaços, perquè a X un post amb enllaç costa 0,20 $ i un sense, 0,015 $ — un post
 diari surt per uns 5,5 $ l'any.
 

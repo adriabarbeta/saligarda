@@ -85,6 +85,10 @@ int_bot <- if (!is.null(MODEL$intensitat_bot))
 # i la mitjana de 6-11 amaga que a primera hora si que bufava
 int_1a <- if (!is.null(MODEL$intensitat_primera))
   predict(MODEL$intensitat_primera, p)$predictions else NA_real_
+# la nit sencera, de les 21 a les 6 hora local: des que el drenatge s'engega
+# fins que es fa de dia
+int_nit <- if (!is.null(MODEL$intensitat_nit))
+  predict(MODEL$intensitat_nit, p)$predictions else NA_real_
 
 # Correccio de l'encongiment cap al centre (vegeu 15_model_operatiu.R). Cal
 # aplicar-la a les dues intensitats amb el mateix factor: la linia de primera
@@ -95,6 +99,7 @@ estira <- function(x, centre) {
 }
 int_bot <- estira(int_bot, MODEL$calibratge$centre)
 int_1a  <- estira(int_1a,  MODEL$calibratge$centre_1a)
+int_nit <- estira(int_nit, MODEL$calibratge$centre_nit)
 # Escala d'intensitat: probabilitats acumulades P(u >= L) per a cada llindar.
 # Es forcen decreixents: dos models independents podrien donar, per atzar,
 # P(>=11) > P(>=8), cosa impossible per definicio.
@@ -121,6 +126,7 @@ linies <- c(
   "==========================================================",
   "",
   sprintf("  Probabilitat d'episodi ....... %3.0f %%   (confianca %s)", 100*pro, confianca),
+  sprintf("  NIT (21-6 hora local) ........ %4.1f km/h", int_nit),
   sprintf("  MATI (%s):", MODEL$finestra_bot %||% "6-11 hora local"),
   sprintf("    probabilitat (>= %d km/h) . %3.0f %%", MODEL$llindar_bot %||% 14, 100*pro_bot),
   sprintf("    intensitat esperada ....... %4.1f km/h", int_bot),
@@ -152,6 +158,7 @@ writeLines(linies, "pronostic.txt")
 reg <- data.table(emes = format(ara, "%Y-%m-%d %H:%M"), nit = as.character(nit),
                   p_saligarda = round(pro, 3), p_bot = round(pro_bot, 3),
                   u_mati_pred = round(int_bot, 2), u_1a_pred = round(int_1a, 2),
+                  u_nit_pred = round(int_nit, 2),
                   p8 = if (!is.null(probs)) round(probs[["8"]], 3) else NA_real_,
                   p11 = if (!is.null(probs)) round(probs[["11"]], 3) else NA_real_,
                   p14 = if (!is.null(probs)) round(probs[["14"]], 3) else NA_real_,

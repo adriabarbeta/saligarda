@@ -21,6 +21,12 @@ derived/*
 !derived/model_operatiu.rds
 !derived/pronostics.csv
 !derived/posts_x.csv
+# Quan canvia el joc de columnes, 16_pronostic.R aparta el registre antic a
+# pronostics_fins_AAAAMMDD.csv. Aixo tambe s'ha de pujar: el runner de GitHub
+# es efimer i, si no es puja, les prediccions anteriors a cada canvi d'esquema
+# es perdrien. Son el material de la verificacio pendent contra les
+# observacions de la Davis.
+!derived/pronostics_fins_*.csv
 
 # registres d'execucio
 *.log

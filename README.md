@@ -9,9 +9,17 @@ publica el pronòstic diari.
 
 ## El bot
 
-Cada vespre pronostica quina Saligarda farà **el matí següent, de 6 a 11 hora
-local**, i en publica un post: la intensitat esperada en km/h (component mitjana
-vall avall) i un adjectiu.
+Cada tarda pronostica quina Saligarda farà la nit i el matí següents, i en
+publica un post amb dues xifres: la **nit, de 21 a 6 hora local**, i el **matí,
+de 6 a 11**. Totes dues són la component mitjana vall avall en km/h, amb un
+adjectiu.
+
+La finestra nocturna va des que el drenatge s'engega —creua els 5 km/h cap a
+les 19-20 UTC— fins que es fa de dia. Compte en llegir-la: és una mitjana de
+nou hores que inclou el vespre, quan el flux tot just arrenca, de manera que
+surt **més baixa que la del matí** encara que la matinada sigui més ventosa
+que el vespre. Destresa, validada deixant un any fora: R² = 0,493 per a la nit
+i 0,533 per al matí.
 
 La finestra és la que viu la gent, no la de l'estudi (00–10 UTC). A l'hivern
 coincideix amb el màxim del drenatge: entre les 6 i les 9 del matí la component

@@ -161,6 +161,22 @@ idx_mati <- gm[h_loc >= 6 & h_loc < 11, .(
   n_mati = sum(!is.na(u_dv))), by = .(date = as.IDate(date))][n_mati >= 40]
 d <- merge(d, idx_mati, by = "date", all.x = TRUE)
 d <- merge(d, idx_primera, by = "date", all.x = TRUE)
+# --- finestra de NIT: de les 21 a les 6 hora local --------------------------
+# El drenatge creua els 5 km/h cap a les 19-20 UTC (mediana d'inici -6 a
+# l'hivern i -4 a l'estiu) i creix sense parar fins al maxim de 14 km/h a les
+# 05-06 UTC. En hora local, doncs, 21-6 recull l'episodi des que s'engega fins
+# que es fa de dia, i encaixa amb la finestra del mati sense solapar-s'hi.
+#
+# Compte amb la data: la finestra travessa la mitjanit i les hores del vespre
+# s'han d'assignar a la nit SEGUENT. S'usa la data LOCAL i no la UTC: a l'estiu
+# la una de la matinada local encara cau al dia UTC anterior, i agrupant per
+# data UTC la nit quedaria tallada pel mig.
+gm[, d_loc := as.IDate(format(datetime, tz = "Europe/Madrid", format = "%Y-%m-%d"))]
+gm[, nit_date := d_loc + fifelse(h_loc >= 21, 1L, 0L)]
+idx_nit <- gm[h_loc >= 21 | h_loc < 6, .(
+  u_nit = mean(u_dv, na.rm = TRUE), n_n = sum(!is.na(u_dv))),
+  by = .(date = nit_date)][n_n >= 72][, n_n := NULL]   # 2/3 de les 108 mostres
+d <- merge(d, idx_nit, by = "date", all.x = TRUE)
 d[, sal12_f := factor(as.integer(u_mati >= LLINDAR_BOT & R_mati >= 0.7), levels = c(0,1))]
 for (L in LLINDARS_BOT)
   d[, (paste0("sal", L, "_f")) :=
@@ -171,6 +187,7 @@ STV <- grep("^st_", names(d), value = TRUE)
 EST <- c("s1","c1","s2","c2")
 d_tot <- d[complete.cases(d[, c("u_dv", OMV), with = FALSE])]   # model final
 d_bot <- d[complete.cases(d[, c("u_mati", "sal12_f", OMV), with = FALSE])]  # bot
+d_nit <- d[complete.cases(d[, c("u_nit", OMV), with = FALSE])]            # bot, nit
 d     <- d[complete.cases(d[, c("u_dv", OMV, STV), with = FALSE])]  # comparar A i B
 cat(sprintf("    nits per comparar OP-A/OP-B: %d | per al model final: %d | Saligarda: %.1f%%\n",
             nrow(d), nrow(d_tot), 100*mean(d$sal)))
@@ -269,6 +286,17 @@ cat(sprintf("  episodis (u_mati >= %d km/h): %.0f dies/any
 ",
             LLINDAR_BOT, 365 * mean(ob)))
 
+cv_nit <- rbindlist(lapply(sort(unique(d_nit$any)), function(a) {
+  tr <- d_nit[any != a]; te <- d_nit[any == a]
+  mi <- ranger(as.formula(paste("u_nit ~", paste(c(EST, OMV), collapse = "+"))),
+               tr, num.trees = NUM_TREES, min.node.size = MIN_NODE)
+  data.table(o = te$u_nit, p = predict(mi, te)$predictions)
+}))
+R2_NIT <- 1 - sum((cv_nit$o - cv_nit$p)^2) / sum((cv_nit$o - mean(cv_nit$o))^2)
+cat(sprintf("  NIT 21-6 local: R2 = %.3f | RMSE = %.2f | mitjana observada %.1f km/h
+",
+            R2_NIT, sqrt(mean((cv_nit$o - cv_nit$p)^2)), mean(d_nit$u_nit)))
+
 # ============================================ models finals per a l'operativa
 final <- list(
   intensitat = ranger(as.formula(paste("u_dv ~", paste(c(EST, OMV), collapse = " + "))),
@@ -284,6 +312,9 @@ final <- list(
                               min.node.size = MIN_NODE),
   ocurrencia_bot = ranger(as.formula(paste("sal12_f ~", paste(c(EST, OMV), collapse = " + "))),
                           d_bot, num.trees = NUM_TREES, min.node.size = MIN_NODE, probability = TRUE),
+  # la nit sencera, de les 21 a les 6 hora local
+  intensitat_nit = ranger(as.formula(paste("u_nit ~", paste(c(EST, OMV), collapse = " + "))),
+                          d_nit, num.trees = NUM_TREES, min.node.size = MIN_NODE),
   # Un bosc de regressio prediu la mitjana condicional, que s'encongeix cap al
   # centre: sense corregir, els matins de saligarda molt forta (19,2 km/h reals
   # de mitjana) sortien anunciats a 13,1. S'estira la dispersio al voltant de la
@@ -301,7 +332,8 @@ final <- list(
   # de +-1 banda. Els matins forts son els que la gent recorda.
   calibratge = list(k = 1.5,
                     centre    = mean(d_bot$u_mati,    na.rm = TRUE),
-                    centre_1a = mean(d_bot$u_primera, na.rm = TRUE)),
+                    centre_1a = mean(d_bot$u_primera, na.rm = TRUE),
+                    centre_nit = mean(d_nit$u_nit,     na.rm = TRUE)),
   llindar_bot = LLINDAR_BOT, llindars_bot = LLINDARS_BOT,
   finestra_bot = "6-11 hora local",
   # un model per llindar: donen probabilitats acumulades P(u >= L)
@@ -319,7 +351,7 @@ final <- list(
   cicle = fread("derived/saligarda_diari.csv")[saligarda == TRUE,
             .(pic = as.integer(round(median(pic, na.rm = TRUE))),
               final = as.integer(round(median(final, na.rm = TRUE)))), by = est],
-  destresa_bot = list(R2 = R2_BOT, AUC = AUC_BOT),
+  destresa_bot = list(R2 = R2_BOT, AUC = AUC_BOT, R2_nit = R2_NIT),
   destresa = list(intensitat_R2 = 1 - sum((a_int$obs-a_int$pred)^2)/sum((a_int$obs-mean(a_int$obs))^2),
                   ocurrencia_AUC = as.numeric(suppressMessages(auc(roc(b_a$obs, b_a$pred, quiet=TRUE)))),
                   sensacio_RMSE = sqrt(mean((w_a$obs-w_a$pred)^2))))

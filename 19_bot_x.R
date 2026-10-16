@@ -57,6 +57,7 @@ if (!is.null(v <- arg_val("nit")))  nit <- as.Date(v)
 if (!is.null(v <- arg_val("p")))    p$p_bot <- as.numeric(v)
 if (!is.null(v <- arg_val("u")))    p$u_mati_pred <- as.numeric(v)
 if (!is.null(v <- arg_val("u1")))   p$u_1a_pred <- as.numeric(v)
+if (!is.null(v <- arg_val("un")))   p$u_nit_pred <- as.numeric(v)
 if (!is.null(v <- arg_val("wc")))   p$wc_min_pred <- as.numeric(v)
 for (L in c("8", "11", "14"))
   if (!is.null(v <- arg_val(paste0("p", L)))) p[[paste0("p", L)]] <- as.numeric(v)
@@ -75,10 +76,15 @@ if (SIMULAT) {
 # ----------------------------------------------- encara arriba a temps?
 # Si l'ordinador ha estat apagat i la tasca s'executa amb retard, el pronostic
 # podria sortir quan la nit ja ha comencat o fins i tot acabat. Un post aixi no
-# informa de res i queda malament. El drenatge s'engega cap a les 18 UTC del dia
-# anterior, aixi que es posa el limit a les 22 UTC: prou marge per a l'emissio
-# de les 19:00 locals i prou aviat per no publicar una nit ja en marxa.
-limit <- as.POSIXct(sprintf("%s 22:00:00", format(as.Date(nit) - 1)), tz = "UTC")
+# informa de res i queda malament. Des que el post cobreix tambe la nit, la
+# finestra pronosticada comenca a les 21 hora local del dia anterior, i aquest
+# es el limit: publicar mes tard seria anunciar una nit ja en marxa. Abans el
+# limit eren les 22 UTC, que son les 00 locals, i no servia de res.
+# Es construeix en hora local i es converteix a UTC perque l'horari d'estiu no
+# desplaci el limit mitja any.
+limit <- as.POSIXct(sprintf("%s 21:00:00", format(as.Date(nit) - 1)),
+                    tz = "Europe/Madrid")
+attr(limit, "tzone") <- "UTC" 
 ara <- Sys.time(); attr(ara, "tzone") <- "UTC"
 if (!NOMES_PROVA && ara > limit) {
   cat(sprintf("Massa tard: son les %s UTC i la nit del %s ja ha comencat.\n",
@@ -138,8 +144,13 @@ adjectiu <- function(u) {
 # La intensitat esperada surt SEMPRE. Amb un sol llindar, un mati de 9,6 km/h
 # previstos es publicava com a "no fara gaire aire" quan era exactament una
 # saligarda lleugera: el model ho sabia i el post ho llencava.
+# Dues finestres: la nit (21-6), quan el drenatge s'engega i va creixent, i el
+# mati (6-11), quan la gent surt. Amb dos numeros al post, "intensitat
+# esperada" ja no deia de que parlava i s'ha hagut d'etiquetar cadascun.
+linia_nit <- if (te(p$u_nit_pred))
+  sprintf("Nit (21-6 h): ~%.0f km/h%s", p$u_nit_pred, adjectiu(p$u_nit_pred)) else NULL
 linia_int <- if (te(p$u_mati_pred))
-  sprintf("Intensitat esperada: ~%.0f km/h%s", p$u_mati_pred, adjectiu(p$u_mati_pred)) else
+  sprintf("Mat\u00ed (6-11 h): ~%.0f km/h%s", p$u_mati_pred, adjectiu(p$u_mati_pred)) else
   "No far\u00e0 gaire aire, segurament"
 
 # L'escala i la linia de dubte es calculen igualment i van a parar al butlleti
@@ -182,14 +193,27 @@ linia_hora <- if (te(p$p11) && p$p11 >= 0.5)
 linia_wc <- if (te(p$wc_min_pred) && p$wc_min_pred <= 5)
   sprintf("Sensaci\u00f3 m\u00ednima: %.0f \u00b0C", p$wc_min_pred) else NULL
 
-text <- paste(c(
-  sprintf("%s Saligarda \u00b7 mat\u00ed %s", emoji, data_txt),
-  linia_int, linia_1a, linia_hora, linia_wc,
-  "#laGarriga #Congost"), collapse = "\n")
+capcalera <- sprintf("%s Saligarda \u00b7 %s %s", emoji,
+                     if (!is.null(linia_nit)) "nit i mat\u00ed" else "mat\u00ed", data_txt)
+munta <- function(opc) paste(c(capcalera, linia_nit, linia_int, opc,
+                               "#laGarriga #Congost"), collapse = "\n")
+
+# X talla a 280 caracters. Abans, passar-se aturava el script i aquell dia no
+# es publicava res: una linia de mes es menjava el post sencer. Ara les linies
+# opcionals cauen per ordre invers d'importancia fins que hi cap. La primera a
+# caure es la de les hores, que es la mes llarga i, a mes, surt de la mediana
+# estacional dels episodis i no pas del pronostic del dia.
+opcionals <- list(linia_1a, linia_hora, linia_wc)
+for (i in c(2L, 3L, 1L)) {
+  if (nchar(text <- munta(unlist(opcionals))) <= 280) break
+  opcionals[i] <- list(NULL)
+}
+text <- munta(unlist(opcionals))
 
 cat("\n---------------- post ----------------\n"); cat(text, "\n")
 cat(sprintf("--------------------------------------\n%d car\u00e0cters\n\n", nchar(text)))
-if (nchar(text) > 280) stop("el post passa de 280 caracters")
+if (nchar(text) > 280)
+  stop("el post passa de 280 caracters ni traient-ne cap linia opcional")
 writeLines(text, "post_x.txt")
 
 # ------------------------------------------------------------- enviament
