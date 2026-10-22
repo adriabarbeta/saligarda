@@ -1,15 +1,15 @@
 ==========================================================
  SALIGARDA - pronostic per a la nit del 23/10/2026
- emes el 2026-10-22 15:16 UTC
+ emes el 2026-10-22 17:53 UTC
 ==========================================================
 
-  Probabilitat d'episodi .......  14 %   (confianca alta)
+  Probabilitat d'episodi .......  15 %   (confianca alta)
   NIT (21-6 hora local) ........  3.9 km/h
   MATI (6-11 hora local):
     probabilitat (>= 14 km/h) .   7 %
-    intensitat esperada .......  0.9 km/h
-    tram 6-9 h ................  4.0 km/h
-    escala .................... >=8 20% | >=11 14% | >=14  6%
+    intensitat esperada .......  0.8 km/h
+    tram 6-9 h ................  3.8 km/h
+    escala .................... >=8 20% | >=11 13% | >=14  6%
   Intensitat esperada ..........  4.0 km/h  -> practicament nul.la
   Sensacio de fred minima ...... 12.4 C
 
