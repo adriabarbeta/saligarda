@@ -123,10 +123,19 @@ jobs:
             done
           fi
 
+      # El resum de l'execucio porta les dues versions: la que ha anat a X i la
+      # que s'ha d'enganxar al canal de WhatsApp. Aixi, obrint l'execucio des
+      # del mobil ja es pot copiar sense passar per la pagina.
       - name: Resum
         if: always()
         run: |
-          echo "### Pronostic" >> $GITHUB_STEP_SUMMARY
+          echo "### Publicat a X" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat post_x.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "(no generat)" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "### Per enganxar al canal de WhatsApp" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat docs/missatge.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "(no generat)" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Pagina amb boto de copiar: https://adriabarbeta.github.io/saligarda/" >> $GITHUB_STEP_SUMMARY
