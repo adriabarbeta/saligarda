@@ -46,7 +46,13 @@ concurrency:                  # que dues execucions no es trepitgin els CSV
 jobs:
   pronostic:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # 20 minuts era massa just i es menjava tres nits (17 i 24 d'octubre i la
+    # del 26). El pas setup-r-dependencies hi arribava pelat i, els dies que el
+    # runner anava una mica mes lent, el job moria exactament als 20:00 amb els
+    # paquets a mig instal.lar. I era un cercle visios: la memoria cau nomes es
+    # desa si el job acaba be, de manera que cap passada no arribava a desar-la
+    # i totes tornaven a compilar des de zero.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -58,6 +64,13 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          # 'always' desa la memoria cau encara que el job no acabi be, que es
+          # el que trenca el cercle visios descrit a timeout-minutes.
+          cache: always
+          # Nomes les dependencies dures. Amb el valor per defecte ("all") hi
+          # entren les suggerides, que aqui no es fan servir i son justament
+          # les que allarguen la instal.lacio.
+          dependencies: '"hard"'
           packages: |
             any::data.table
             any::jsonlite
