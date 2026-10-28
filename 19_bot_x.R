@@ -305,12 +305,32 @@ if (NOMES_PROVA) {
   } else if (status_code(r) %in% c(200L, 201L)) {
     enviat <- TRUE
     detall <- paste("id", content(r)$data$id)
+  } else if (status_code(r) == 403L &&
+             grepl("duplicate", content(r, "text", encoding = "UTF-8"),
+                   ignore.case = TRUE)) {
+    # X pot CREAR el post i tot seguit respondre 403 "duplicate content". Va
+    # passar el 26/10/2026: el registre deia que no s'havia enviat i el post
+    # era al perfil. Tractar-ho com a fracas te dues consequencies dolentes:
+    # el registre menteix, i el guarda de duplicats (que mira la columna
+    # 'enviat') no s'activa, de manera que la passada seguent ho torna a
+    # intentar. Un 403 de duplicat vol dir, per definicio, que el contingut
+    # ja hi es: per tant, publicat.
+    enviat <- TRUE
+    detall <- "403 duplicat: X diu que el post ja hi era (resposta sense id)"
   } else {
     detall <- sprintf("HTTP %d: %s", status_code(r),
                       substr(content(r, "text", encoding = "UTF-8"), 1, 200))
   }
 }
 cat(if (enviat) "PUBLICAT: " else "NO publicat: ", detall, "\n", sep = "")
+
+# Codi de sortida. Fins ara 'codi_sortida' es consultava al final pero no
+# s'assignava enlloc: exists() donava FALSE i el script sortia sempre amb 0,
+# de manera que una publicacio fallida apareixia com a 'success' a GitHub
+# Actions i no se'n sabia res. Nomes es fracas si hi havia credencials i tot
+# i aixi no s'ha publicat; no tenir-ne (execucio local) o anar en mode prova
+# no ho son.
+codi_sortida <- if (!NOMES_PROVA && !is.null(credencials) && !enviat) 1L else 0L
 
 fwrite(data.table(moment = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
                   nit = as.character(nit), probabilitat = pc,

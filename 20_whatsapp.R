@@ -32,7 +32,16 @@ TEXT     <- "docs/missatge.txt"
 if (!file.exists(REGISTRE)) stop("no hi ha ", REGISTRE)
 reg <- fread(REGISTRE)
 if (!nrow(reg)) stop("el registre de posts es buit")
-p <- reg[.N]
+# S'agafa la redaccio mes recent, pero nomes entre les files REALS. Les
+# simulacions (--nit=...) tambe es registren i es reconeixen perque la nit no
+# segueix el dia en que es van escriure: un pronostic de debo sempre es per a
+# la matinada immediata. Sense aquest filtre, una prova feta al setembre per a
+# una nit de gener es quedava la pagina per sempre.
+reg[, dies := as.integer(as.IDate(nit) - as.IDate(substr(moment, 1, 10)))]
+real <- reg[dies %in% 0:1]
+if (!nrow(real)) stop("al registre no hi ha cap pronostic real")
+setorder(real, -moment)
+p <- real[1]
 
 # el registre desa el post amb " | " alla on hi havia salts de linia
 linies <- trimws(strsplit(as.character(p$text), " | ", fixed = TRUE)[[1]])
