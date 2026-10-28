@@ -4,31 +4,38 @@
 Xifres totes mesurades amb validacio deixant un any sencer fora de
 l'entrenament (vegeu INFORME.md). Si canvia el model, cal refer-les.
 
+L'ordre de les variables surt de la importancia per permutacio del bosc
+(figura F24). No es una prova de significacio estadistica: vol dir quant
+empitjora la prediccio si es desordena aquella variable.
+
 
 -----------------------------------------------------------------------------
- FIL PER A X  (7 posts, tots per sota de 280 caracters)
+ FIL PER A X  (8 posts, tots per sota de 280 caracters)
 -----------------------------------------------------------------------------
 
-1/7
+1/8
 🍃 Com es calcula la Saligarda que publico cada dia? Un fil curt: les dades, el mètode i, sobretot, en què m'equivoco.
 
-2/7
+2/8
 LES DADES. Tretze anys de mesures cada 5 minuts de l'estació de l'Ajuntament de la Garriga: 1,3 milions de registres. El que publico no és la velocitat del vent sinó la seva component projectada sobre l'eix de la vall (350,9°): només compta l'aire que baixa pel Congost.
 
-3/7
+3/8
 EL MÈTODE. Un bosc aleatori entrenat amb 3.855 nits. Es menja 34 variables del model numèric d'Open-Meteo en quatre punts —nuvolositat, temperatura, punt de rosada, pressió, vent, radiació— i el cicle anual. Cap observació local: funciona encara que l'estació s'espatlli.
 
-4/7
-QUÈ MANA. Sobretot el vent de component nord que el model numèric ja preveu. Després el cel ras: sense refredament no es forma la capa d'aire fred al fons de la vall i no hi ha drenatge. I l'època de l'any. La pressió absoluta, poca cosa.
+4/8
+QUÈ MANA, per ordre. El vent que el model numèric ja preveu sobre la Garriga, i molt especialment la seva component nord-sud, que és la direcció de la vall. Després la nuvolositat de la nit, total i baixa. La temperatura i el punt de rosada. L'època de l'any. I la pressió.
 
-5/7
-LA FIABILITAT, sense maquillar. Error típic de 2,3 km/h. L'adjectiu (suau, moderada, forta) és exacte el 45 % dels dies i a una banda de distància el 81 %. La xifra va una mica estirada a posta: sense fer-ho, els matins més forts sortien sempre curts.
+5/8
+COMPTA POC el que esperava que manés: els gradients de pressió entre el nord i el sud de Catalunya, i si el baròmetre puja o baixa. El que decideix la Saligarda és local i de la mateixa nit, no la situació general dels dies abans.
 
-6/7
-ON FALLA. Quan anuncio vent, un matí de cada 29 acaba en calma. I els errors s'encadenen: l'endemà d'un dia dolent, la probabilitat de tornar-m'hi es dobla. Si una situació estancada s'asseu a la vall, m'equivoco mentre duri.
+6/8
+L'ESCALA que faig servir, en component vall avall: menys de 6 km/h pràcticament calma; 6-8 molt suau; 8-11 suau; 11-14 moderada; 14-17 forta; 17 o més molt forta. Al post hi va el número i, entre parèntesis, la paraula que li toca.
 
-7/7
-EL PITJOR ENEMIC és la boira. Si es forma, la Saligarda mor: aquells matins el vent real és d'1 a 4 km/h. I no la puc veure venir, perquè cap model global no resol una boira de radiació dins d'una vall de dos quilòmetres d'amplada.
+7/8
+LA FIABILITAT, sense maquillar. L'error típic és de 2,3 km/h. Encerto la paraula exacta el 45 % dels dies i em quedo a un esglaó el 81 %. El número va una mica estirat a posta: sense fer-ho, els matins més forts sortien sempre curts.
+
+8/8
+ON FALLO. Quan anuncio vent, un matí de cada 29 acaba en calma. I el pitjor enemic és la boira: si es forma, la Saligarda mor, i no la puc veure venir perquè cap model global no resol una boira dins d'una vall de dos quilòmetres.
 
 Codi i dades: github.com/adriabarbeta/saligarda
 
@@ -41,13 +48,23 @@ Codi i dades: github.com/adriabarbeta/saligarda
 
 *Les dades.* Tretze anys de mesures cada 5 minuts de l'estació de l'Ajuntament de la Garriga: 1,3 milions de registres. El que us dono cada dia no és la velocitat del vent, sinó la seva component projectada sobre l'eix de la vall (350,9°). Dit d'una altra manera: només compta l'aire que baixa pel Congost, no el que bufa de través.
 
-*El mètode.* Un bosc aleatori —un model estadístic que aprèn de 3.855 nits passades— alimentat amb 34 variables del model numèric d'Open-Meteo en quatre punts: nuvolositat, temperatura, punt de rosada, pressió, vent i radiació, més el cicle anual. No fa servir cap observació local, de manera que segueix funcionant encara que l'estació s'espatlli.
+*El mètode.* Un bosc aleatori —un model estadístic que aprèn de 3.855 nits passades— alimentat amb 34 variables del model numèric d'Open-Meteo en quatre punts, més el cicle anual. No fa servir cap observació local, de manera que segueix funcionant encara que l'estació s'espatlli.
 
-*Què mana.* Sobretot, el vent de component nord que el model numèric ja preveu. Després el cel ras, perquè sense refredament nocturn no es forma la capa d'aire fred al fons de la vall i sense capa freda no hi ha drenatge. I l'època de l'any. La pressió absoluta compta poc.
+*Quines variables manen.* Per ordre d'importància:
 
-*La fiabilitat, sense maquillar.* L'error típic és de 2,3 km/h. L'adjectiu encerta de ple el 45 % dels dies i queda a una banda de distància el 81 %. Tot mesurat deixant un any sencer fora de l'entrenament, mai sobre dies que el model ja coneixia. La xifra va una mica estirada a posta: sense fer-ho, els matins més forts sortien sempre curts.
+1. El vent que el model numèric ja preveu sobre la Garriga, i molt especialment la seva component nord-sud, que és la direcció de la vall. Aquesta sola val més que totes les altres.
+2. La nuvolositat de la nit, la total i la baixa. Sense cel ras no hi ha refredament, sense refredament no es forma la capa d'aire fred al fons de la vall, i sense capa freda no hi ha res que empenyi l'aire avall.
+3. La temperatura nocturna i el punt de rosada.
+4. L'època de l'any.
+5. La pressió a la Garriga.
 
-*On falla.* Quan anuncio vent, un matí de cada 29 acaba en calma. I els errors s'encadenen: l'endemà d'un dia dolent, la probabilitat de tornar-m'hi es dobla. Si una situació estancada s'instal·la a la vall, m'equivocaré mentre duri.
+I compta poc, al contrari del que esperava: els gradients de pressió entre el nord i el sud de Catalunya, i la tendència del baròmetre. El que decideix la Saligarda és local i de la mateixa nit, no la situació general dels dies anteriors.
+
+*L'escala.* En component vall avall: menys de 6 km/h és pràcticament calma; de 6 a 8, molt suau; de 8 a 11, suau; de 11 a 14, moderada; de 14 a 17, forta; i de 17 en amunt, molt forta. Al post hi trobareu el número i, entre parèntesis, la paraula que li correspon.
+
+*La fiabilitat, sense maquillar.* L'error típic és de 2,3 km/h. Encerto la paraula exacta el 45 % dels dies, i el 81 % em quedo com a molt a un esglaó —dic «suau» i és «moderada», o al revés—. Tot mesurat deixant un any sencer fora de l'entrenament, mai sobre dies que el model ja coneixia. El número va una mica estirat a posta: sense fer-ho, els matins més forts sortien sempre curts.
+
+*On fallo.* Quan anuncio vent, un matí de cada 29 acaba en calma. I els errors s'encadenen: l'endemà d'un dia dolent, la probabilitat de tornar-m'hi es dobla. Si una situació estancada s'instal·la a la vall, m'equivocaré mentre duri.
 
 *El pitjor enemic és la boira.* Si arriba a formar-se, la Saligarda mor: aquells matins el vent real és d'1 a 4 km/h. I no la puc veure venir, perquè cap model global no resol una boira de radiació dins d'una vall de dos quilòmetres d'amplada. La boira i la Saligarda neixen de les mateixes condicions —cel ras, aire quiet, nit llarga— i competeixen: si el drenatge arrenca, ventila la vall i la boira no es forma; si la boira guanya, el drenatge ja no arrenca.
 
