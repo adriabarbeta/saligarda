@@ -1,0 +1,54 @@
+=============================================================================
+ COM ES CALCULA LA SALIGARDA  ·  text divulgatiu per a X i per al canal
+=============================================================================
+Xifres totes mesurades amb validacio deixant un any sencer fora de
+l'entrenament (vegeu INFORME.md). Si canvia el model, cal refer-les.
+
+
+-----------------------------------------------------------------------------
+ FIL PER A X  (7 posts, tots per sota de 280 caracters)
+-----------------------------------------------------------------------------
+
+1/7
+🍃 Com es calcula la Saligarda que publico cada dia? Un fil curt: les dades, el mètode i, sobretot, en què m'equivoco.
+
+2/7
+LES DADES. Tretze anys de mesures cada 5 minuts de l'estació de l'Ajuntament de la Garriga: 1,3 milions de registres. El que publico no és la velocitat del vent sinó la seva component projectada sobre l'eix de la vall (350,9°): només compta l'aire que baixa pel Congost.
+
+3/7
+EL MÈTODE. Un bosc aleatori entrenat amb 3.855 nits. Es menja 34 variables del model numèric d'Open-Meteo en quatre punts —nuvolositat, temperatura, punt de rosada, pressió, vent, radiació— i el cicle anual. Cap observació local: funciona encara que l'estació s'espatlli.
+
+4/7
+QUÈ MANA. Sobretot el vent de component nord que el model numèric ja preveu. Després el cel ras: sense refredament no es forma la capa d'aire fred al fons de la vall i no hi ha drenatge. I l'època de l'any. La pressió absoluta, poca cosa.
+
+5/7
+LA FIABILITAT, sense maquillar. Error típic de 2,3 km/h. L'adjectiu (suau, moderada, forta) és exacte el 45 % dels dies i a una banda de distància el 81 %. La xifra va una mica estirada a posta: sense fer-ho, els matins més forts sortien sempre curts.
+
+6/7
+ON FALLA. Quan anuncio vent, un matí de cada 29 acaba en calma. I els errors s'encadenen: l'endemà d'un dia dolent, la probabilitat de tornar-m'hi es dobla. Si una situació estancada s'asseu a la vall, m'equivoco mentre duri.
+
+7/7
+EL PITJOR ENEMIC és la boira. Si es forma, la Saligarda mor: aquells matins el vent real és d'1 a 4 km/h. I no la puc veure venir, perquè cap model global no resol una boira de radiació dins d'una vall de dos quilòmetres d'amplada.
+
+Codi i dades: github.com/adriabarbeta/saligarda
+
+
+-----------------------------------------------------------------------------
+ MISSATGE PER AL CANAL DE WHATSAPP  (un de sol)
+-----------------------------------------------------------------------------
+
+*Com es calcula la Saligarda*
+
+*Les dades.* Tretze anys de mesures cada 5 minuts de l'estació de l'Ajuntament de la Garriga: 1,3 milions de registres. El que us dono cada dia no és la velocitat del vent, sinó la seva component projectada sobre l'eix de la vall (350,9°). Dit d'una altra manera: només compta l'aire que baixa pel Congost, no el que bufa de través.
+
+*El mètode.* Un bosc aleatori —un model estadístic que aprèn de 3.855 nits passades— alimentat amb 34 variables del model numèric d'Open-Meteo en quatre punts: nuvolositat, temperatura, punt de rosada, pressió, vent i radiació, més el cicle anual. No fa servir cap observació local, de manera que segueix funcionant encara que l'estació s'espatlli.
+
+*Què mana.* Sobretot, el vent de component nord que el model numèric ja preveu. Després el cel ras, perquè sense refredament nocturn no es forma la capa d'aire fred al fons de la vall i sense capa freda no hi ha drenatge. I l'època de l'any. La pressió absoluta compta poc.
+
+*La fiabilitat, sense maquillar.* L'error típic és de 2,3 km/h. L'adjectiu encerta de ple el 45 % dels dies i queda a una banda de distància el 81 %. Tot mesurat deixant un any sencer fora de l'entrenament, mai sobre dies que el model ja coneixia. La xifra va una mica estirada a posta: sense fer-ho, els matins més forts sortien sempre curts.
+
+*On falla.* Quan anuncio vent, un matí de cada 29 acaba en calma. I els errors s'encadenen: l'endemà d'un dia dolent, la probabilitat de tornar-m'hi es dobla. Si una situació estancada s'instal·la a la vall, m'equivocaré mentre duri.
+
+*El pitjor enemic és la boira.* Si arriba a formar-se, la Saligarda mor: aquells matins el vent real és d'1 a 4 km/h. I no la puc veure venir, perquè cap model global no resol una boira de radiació dins d'una vall de dos quilòmetres d'amplada. La boira i la Saligarda neixen de les mateixes condicions —cel ras, aire quiet, nit llarga— i competeixen: si el drenatge arrenca, ventila la vall i la boira no es forma; si la boira guanya, el drenatge ja no arrenca.
+
+Tot és públic, codi i dades: github.com/adriabarbeta/saligarda
