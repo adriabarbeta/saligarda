@@ -1,25 +1,25 @@
 ==========================================================
  SALIGARDA - pronostic per a la nit del 31/10/2026
- emes el 2026-10-30 16:37 UTC
+ emes el 2026-10-30 18:28 UTC
 ==========================================================
 
-  Probabilitat d'episodi .......  83 %   (confianca alta)
-  NIT (21-6 hora local) ........ 10.4 km/h
+  Probabilitat d'episodi .......  79 %   (confianca mitjana)
+  NIT (21-6 hora local) ........  9.3 km/h
   MATI (6-11 hora local):
-    probabilitat (>= 14 km/h) .  40 %
-    intensitat esperada ....... 14.3 km/h
-    tram 6-9 h ................ 15.1 km/h
-    escala .................... >=8 90% | >=11 70% | >=14 42%
-  Intensitat esperada .......... 11.5 km/h  -> notable
-  Sensacio de fred minima ...... 10.4 C
+    probabilitat (>= 14 km/h) .  33 %
+    intensitat esperada ....... 13.6 km/h
+    tram 6-9 h ................ 14.2 km/h
+    escala .................... >=8 87% | >=11 64% | >=14 32%
+  Intensitat esperada .......... 10.9 km/h  -> moderada
+  Sensacio de fred minima ...... 10.7 C
 
   Condicions previstes (00-10 UTC):
-    nuvolositat total ..........   6 %
-    nuvolositat baixa ..........   6 %
-    pressio .................... 1021.8 hPa
-    tendencia 24 h .............  +0.4 hPa
-    gradient nord-sud ..........  +4.4 hPa
-    temperatura del model ...... 11.7 C
+    nuvolositat total ..........  20 %
+    nuvolositat baixa ..........  20 %
+    pressio .................... 1021.7 hPa
+    tendencia 24 h .............  +0.1 hPa
+    gradient nord-sud ..........  +4.5 hPa
+    temperatura del model ...... 12.1 C
 
   [model entrenat el 2026-10-16 amb 3855 nits; en validacio any a any:
    intensitat R2 = 0.58, ocurrencia AUC = 0.87, sensacio RMSE = 1.4 C]
