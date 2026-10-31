@@ -1,6 +1,6 @@
 ==========================================================
  SALIGARDA - pronostic per a la nit del 01/11/2026
- emes el 2026-10-31 15:39 UTC
+ emes el 2026-10-31 17:34 UTC
 ==========================================================
 
   Probabilitat d'episodi .......  41 %   (confianca baixa)
@@ -8,8 +8,8 @@
   MATI (6-11 hora local):
     probabilitat (>= 14 km/h) .  10 %
     intensitat esperada .......  7.7 km/h
-    tram 6-9 h ................  9.1 km/h
-    escala .................... >=8 47% | >=11 26% | >=14 11%
+    tram 6-9 h ................  9.0 km/h
+    escala .................... >=8 47% | >=11 27% | >=14 11%
   Intensitat esperada ..........  7.8 km/h  -> fluixa
   Sensacio de fred minima ...... 10.2 C
 
