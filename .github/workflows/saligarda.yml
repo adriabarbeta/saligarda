@@ -6,25 +6,31 @@ name: Pronostic diari de la Saligarda
 # publiqui dos cops la mateixa nit, i el de frescor impedeix publicar una nit
 # que ja hagi comencat.
 #
-# Hores UTC (GitHub no fa cas de l'horari d'estiu). El cron de GitHub
-# s'endarrereix entre 2 i 3,5 hores segons la carrega, mesurat sobre les
-# execucions reals. Amb el cron a les 10:00 i les 13:00, el post surt cap a les
-# 12:30 i 15:30 UTC, es a dir entre les 14:30 i les 17:30 hora local.
+# Hores UTC (GitHub no fa cas de l'horari d'estiu).
 #
-# Des que el pronostic cobreix tambe la nit (21-6 local), el limit de frescor
-# de 19_bot_x.R son les 21:00 locals del dia anterior, no pas les 22:00 UTC
-# d'abans. Per aixo s'ha avancat el cron una hora: calen tres o quatre hores de
-# marge entre la segona passada i aquest limit.
+# EL RETARD DEL CRON CREIX. Mesurat sobre les execucions reals: 3,6 h el
+# 30/10/2026, 5,3 h l'1/11, i 7,1 i 9,2 h el 2/11. Aquell dia la primera
+# passada va arrencar a les 20:06 UTC i el limit de frescor son les 20:00
+# (21:00 locals a l'hivern): el post es va perdre per sis minuts.
 #
-# LIMIT DUR: el cron no pot baixar de les 10:00 UTC, i ara ja hi es just. 
-# 16_pronostic.R tria la nit objectiu mirant si ja han passat les 10 UTC; abans
-# d'aquesta hora apuntaria a la matinada del mateix dia, que ja ha passat. Si
-# algun dia cal publicar encara mes aviat, s'ha de canviar aquella regla
-# primer, no pas el cron.
+# Per aixo el cron va a les 08:00 i les 12:00, que donen 12 i 8 hores de marge
+# a l'hivern, i 11 i 7 a l'estiu. Si el retard torna a creixer, el que s'ha
+# d'avancar es la primera.
+#
+# No s'avanca mes perque hi ha un cost: com mes aviat s'emet, mes llarg es el
+# termini del model numeric que alimenta el pronostic, i pitjor es. Amb el
+# cron a les 06:00 el post sortiria, els dies sense retard, catorze hores
+# abans no comenci la nit. A les 08:00, i amb el retard habitual de 3 a 5
+# hores, surt cap al migdia, que es a prop d'on era.
+#
+# Ja no hi ha cap limit dur d'hora. 16_pronostic.R calculava la nit objectiu
+# amb un llindar fix de les 10 UTC, que obligava a no baixar d'alla; ara mira
+# si les 21:00 locals d'ahir ja han passat, cosa que es correcta a qualsevol
+# hora. El cron es pot avancar tant com calgui.
 on:
   schedule:
-    - cron: "0 10 * * *"
-    - cron: "0 13 * * *"
+    - cron: "0 8 * * *"
+    - cron: "0 12 * * *"
   workflow_dispatch:          # permet llancar-lo a ma des de la web
     inputs:
       nomes_prova:

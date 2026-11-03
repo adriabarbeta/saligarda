@@ -59,13 +59,26 @@ P <- P[complete.cases(P[, MODEL$vars, with = FALSE])]
 
 ara <- Sys.time()
 attr(ara, "tzone") <- "UTC"
-# La finestra de l'episodi va de les 00 a les 10 UTC del dia D. Si ja han passat
-# les 10 UTC, la nit d'avui s'ha acabat i el pronostic ha de ser per a dema.
+# S'apunta a la primera nit que encara NO hagi comencat. La nit D va de les
+# 21:00 locals de D-1 fins al mati de D, de manera que n'hi ha prou de mirar si
+# les 21:00 locals d'ahir ja han passat.
+#
+# Abans aqui hi havia un llindar fix de les 10 UTC, i obligava a no posar mai
+# el cron abans d'aquella hora. Com que el cron de GitHub s'endarrereix cada
+# cop mes -el 2/11/2026 va arribar a 9 hores- aquell terra impedia donar-se
+# marge. Calculant l'inici real de la nit, el cron pot anar a qualsevol hora i
+# la regla continua sent correcta. Es construeix en hora local i es converteix
+# a UTC perque l'horari d'estiu no desplaci el llindar mitja any.
+inici_de_la_nit <- function(d) {
+  t <- as.POSIXct(sprintf("%s 21:00:00", format(as.Date(d) - 1)), tz = "Europe/Madrid")
+  attr(t, "tzone") <- "UTC"
+  t
+}
 nit <- if (length(args) && grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", args[1])) {
   as.IDate(args[1])
 } else {
   avui <- as.IDate(format(ara, "%Y-%m-%d"))
-  objectiu <- if (as.integer(format(ara, "%H")) >= 10) avui + 1L else avui
+  objectiu <- if (ara < inici_de_la_nit(avui)) avui else avui + 1L
   if (objectiu %in% P$date) objectiu else max(P$date)
 }
 p <- P[date == nit]
