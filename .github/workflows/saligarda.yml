@@ -13,15 +13,27 @@ name: Pronostic diari de la Saligarda
 # passada va arrencar a les 20:06 UTC i el limit de frescor son les 20:00
 # (21:00 locals a l'hivern): el post es va perdre per sis minuts.
 #
-# Per aixo el cron va a les 08:00 i les 12:00, que donen 12 i 8 hores de marge
-# a l'hivern, i 11 i 7 a l'estiu. Si el retard torna a creixer, el que s'ha
-# d'avancar es la primera.
+# I EL 3/11/2026 NO SE'N VA EXECUTAR CAP. Ni endarrerida ni a la cua: GitHub
+# les va descartar. El workflow constava com a actiu i el repositori tenia
+# activitat del mateix mati. Contra aixo el marge no serveix de res.
 #
-# No s'avanca mes perque hi ha un cost: com mes aviat s'emet, mes llarg es el
-# termini del model numeric que alimenta el pronostic, i pitjor es. Amb el
-# cron a les 06:00 el post sortiria, els dies sense retard, catorze hores
-# abans no comenci la nit. A les 08:00, i amb el retard habitual de 3 a 5
-# hores, surt cap al migdia, que es a prop d'on era.
+# Dues mesures:
+#
+# 1) Quatre intents en lloc de dos. Nomes el primer que se'n surti publica;
+#    la resta topen amb el guarda de duplicats de 19_bot_x.R i callen.
+#
+# 2) Minuts estranys. GitHub encua les tasques programades i les del minut :00
+#    son les mes congestionades, que es quan mes se'n descarten. Posant-les a
+#    :17, :43, :29 i :11 s'esquiva el pic.
+#
+# Marges fins al limit de frescor (20:00 UTC a l'hivern, 19:00 a l'estiu):
+# 12,7 h | 9,3 h | 6,5 h | 3,8 h.
+#
+# No s'avancen mes perque emetre abans te un cost: com mes aviat s'emet, mes
+# llarg es el termini del model numeric i pitjor es el pronostic.
+#
+# Si aixo tampoc no basta, l'unica sortida es deixar de dependre del cron de
+# GitHub i disparar el workflow des de fora (workflow_dispatch per API).
 #
 # Ja no hi ha cap limit dur d'hora. 16_pronostic.R calculava la nit objectiu
 # amb un llindar fix de les 10 UTC, que obligava a no baixar d'alla; ara mira
@@ -29,8 +41,10 @@ name: Pronostic diari de la Saligarda
 # hora. El cron es pot avancar tant com calgui.
 on:
   schedule:
-    - cron: "0 8 * * *"
-    - cron: "0 12 * * *"
+    - cron: "17 7 * * *"
+    - cron: "43 10 * * *"
+    - cron: "29 13 * * *"
+    - cron: "11 16 * * *"
   workflow_dispatch:          # permet llancar-lo a ma des de la web
     inputs:
       nomes_prova:
